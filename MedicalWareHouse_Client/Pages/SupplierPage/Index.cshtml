@@ -1,0 +1,819 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.SupplierPage.IndexModel
+@{
+    ViewData["Title"] = "Quản Lý Nhà Cung Cấp";
+}
+
+@await Html.PartialAsync("_EnhancedUI")
+
+@if (Model.Roles != null && Model.Roles.Any())
+{
+    <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-user-shield fs-4 me-3"></i>
+            <div>
+                <span class="fw-medium">Vai trò hiện tại:</span> 
+                @string.Join(", ", Model.Roles.Select(r => r == "ADMIN" ? "Quản Trị Viên" : r))
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="container-fluid mt-4">
+    <div class="enhanced-card fade-in">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title"><i class="fas fa-building me-2 text-primary"></i>Quản Lý Nhà Cung Cấp</h3>
+                <button type="button" class="btn btn-enhanced btn-enhanced-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                    <i class="fas fa-plus me-2"></i> Thêm Nhà Cung Cấp Mới
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Search and Filter -->
+            <div class="row mb-4">
+                <div class="col-md-8 col-lg-6">
+                    <form method="get" class="d-flex gap-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" name="KeySearch" class="form-control border-start-0 ps-0" 
+                                   placeholder="Tìm kiếm theo tên, email nhà cung cấp..."
+                                   value="@Model.KeySearch" />
+                            <input asp-for="CurrentPage" type="hidden" name="CurrentPage" value="1" />
+                        </div>
+                        <button class="btn btn-enhanced btn-enhanced-primary" type="submit">
+                            <i class="fas fa-search me-2"></i> Tìm Kiếm
+                        </button>
+                        @if (!string.IsNullOrEmpty(Model.KeySearch))
+                        {
+                            <a href="@Url.Page("./Index")" class="btn btn-enhanced btn-enhanced-secondary">
+                                <i class="fas fa-times me-1"></i> Xóa Bộ Lọc
+                            </a>
+                        }
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Notifications -->
+            @if (TempData.ContainsKey("SuccessMessage"))
+            {
+                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle fs-4 me-3"></i>
+                        <span>@TempData["SuccessMessage"]</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            
+            @if (TempData.ContainsKey("ErrorMessage"))
+            {
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-circle fs-4 me-3"></i>
+                        <div>
+                            <span class="fw-medium">Lỗi!</span> @TempData["ErrorMessage"]
+                            @if(TempData["ErrorMessage"].ToString().Contains("lô hàng"))
+                            {
+                                <div class="mt-1 small">
+                                    <i class="fas fa-info-circle me-1"></i> Nhà cung cấp đã có dữ liệu lô hàng liên quan. Vui lòng kiểm tra lại.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            
+            <!-- Table Section -->
+            @if (Model.Suppliers != null && Model.Suppliers.Any())
+            {
+                <div class="enhanced-card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="py-3 ps-4">Tên</th>
+                                        <th class="py-3">Số Điện Thoại</th>
+                                        <th class="py-3">Email</th>
+                                        <th class="py-3 text-center">Chức Năng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var supplier in Model.Suppliers)
+                                    {
+                                        <tr data-supplier-id="@supplier.Id">
+                                            <td class="py-3 ps-4 align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-light rounded-circle p-2 me-3">
+                                                        <i class="fas fa-building text-primary"></i>
+                                                    </div>
+                                                    <span class="fw-medium">@supplier.Name</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-phone text-success me-2"></i>
+                                                    @supplier.PhoneNumber
+                                                </div>
+                                            </td>
+                                            <td class="py-3 align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-envelope text-info me-2"></i>
+                                                    @supplier.ContactEmail
+                                                </div>
+                                            </td>
+                                            <td class="py-3 align-middle text-center">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-enhanced btn-enhanced-primary btn-update-supplier"
+                                                            data-supplier-id="@supplier.Id"
+                                                            data-supplier-name="@supplier.Name"
+                                                            data-supplier-phone="@supplier.PhoneNumber"
+                                                            data-supplier-email="@supplier.ContactEmail"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#updateSupplierModal">
+                                                        <i class="fas fa-edit me-1"></i> Cập Nhật
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-enhanced btn-enhanced-secondary view-shipments" 
+                                                            data-supplier-id="@supplier.Id" 
+                                                            data-supplier-name="@supplier.Name">
+                                                        <i class="fas fa-truck me-1"></i> Lô Hàng
+                                                    </button>
+                                                    @if (Model.Roles.Contains("ADMIN"))
+                                                    {
+                                                        bool hasShipments = supplier.Shipment != null && supplier.Shipment.Any();
+                                                        if (hasShipments)
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-enhanced btn-enhanced-danger" disabled
+                                                                    title="Không thể xóa nhà cung cấp đã có lô hàng">
+                                                                <i class="fas fa-lock me-1"></i> Không Thể Xóa
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn btn-sm btn-enhanced btn-enhanced-danger delete-supplier-btn"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#deleteSupplierModal"
+                                                                    data-supplier-id="@supplier.Id"
+                                                                    data-supplier-name="@supplier.Name">
+                                                                <i class="fas fa-trash me-1"></i> Xóa
+                                                            </button>
+                                                        }
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination Section -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted">Số hàng mỗi trang:</span>
+                        <select asp-for="PageSize" id="pageSize" name="PageSize" class="form-select form-select-sm" style="width: auto;"
+                                onchange="window.location.href='@Url.Page("./Index", new { KeySearch = Model.KeySearch, CurrentPage = 1, PageSize = "PLACEHOLDER" })'.replace('PLACEHOLDER', this.value)">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+
+                    <nav aria-label="Phân trang">
+                        <ul class="pagination mb-0">
+                            <li class="page-item @(!Model.hasPrePage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Page("./Index", new { KeySearch = Model.KeySearch, CurrentPage = Model.CurrentPage - 1, PageSize = Model.PageSize })" aria-label="Trang trước">
+                                    <span aria-hidden="true">«</span>
+                                </a>
+                            </li>
+                            <li class="page-item active">
+                                <a class="page-link" href="@Url.Page("./Index", new { KeySearch = Model.KeySearch, CurrentPage = Model.CurrentPage, PageSize = Model.PageSize })">@Model.CurrentPage</a>
+                            </li>
+                            <li class="page-item @(!Model.hasNextPage ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Page("./Index", new { KeySearch = Model.KeySearch, CurrentPage = Model.CurrentPage + 1, PageSize = Model.PageSize })" aria-label="Trang sau">
+                                    <span aria-hidden="true">»</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-search fa-4x text-secondary opacity-50"></i>
+                    </div>
+                    <h5>Không tìm thấy nhà cung cấp nào</h5>
+                    <p class="text-muted">Hãy thêm nhà cung cấp mới hoặc điều chỉnh bộ lọc tìm kiếm</p>
+                    <button type="button" class="btn btn-enhanced btn-enhanced-primary mt-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                        <i class="fas fa-plus me-2"></i> Thêm Nhà Cung Cấp Mới
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cập Nhật Nhà Cung Cấp -->
+<div class="modal fade" id="updateSupplierModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow enhanced-card">
+            <form method="post" asp-page-handler="Update" id="updateSupplierForm" class="enhanced-form needs-validation" novalidate>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2 text-primary"></i>Cập Nhật Nhà Cung Cấp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    @if (!ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger border-0 shadow-sm">
+                            <div class="d-flex">
+                                <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                                <ul class="mb-0 ps-0" style="list-style-type: none;">
+                                    @foreach (var modelStateEntry in ModelState.Values)
+                                    {
+                                        foreach (var error in modelStateEntry.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                    <input type="hidden" id="CSupplier_Id" name="SupplierId" />
+                    <div class="mb-3">
+                        <label asp-for="CSupplier.Name" class="form-label fw-medium">Tên nhà cung cấp</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-building"></i></span>
+                            <input asp-for="CSupplier.Name" class="form-control" type="text" required />
+                        </div>
+                        <span asp-validation-for="CSupplier.Name" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CSupplier.PhoneNumber" class="form-label fw-medium">Số Điện Thoại</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-phone"></i></span>
+                            <input asp-for="CSupplier.PhoneNumber" class="form-control" required pattern="[0-9]{10}" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="10" />
+                        </div>
+                        <div class="form-text"><i class="fas fa-info-circle me-1"></i>Số điện thoại phải chứa đúng 10 chữ số.</div>
+                        <span asp-validation-for="CSupplier.PhoneNumber" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CSupplier.ContactEmail" class="form-label fw-medium">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
+                            <input asp-for="CSupplier.ContactEmail" class="form-control" type="email" required 
+                                   oninput="this.value = this.value.replace(/\s+/g, '');" />
+                        </div>
+                        <div class="form-text"><i class="fas fa-info-circle me-1"></i>Email phải chứa ký tự @@.</div>
+                        <span asp-validation-for="CSupplier.ContactEmail" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-enhanced btn-enhanced-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Đóng
+                    </button>
+                    <button type="submit" class="btn btn-enhanced btn-enhanced-success">
+                        <i class="fas fa-save me-1"></i> Cập Nhật
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm Nhà Cung Cấp -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow enhanced-card">
+            <form method="post" asp-page-handler="Create" id="createSupplierForm" class="enhanced-form needs-validation" novalidate>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title"><i class="fas fa-plus me-2 text-primary"></i>Thêm Nhà Cung Cấp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    @if (!ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger border-0 shadow-sm">
+                            <div class="d-flex">
+                                <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                                <ul class="mb-0 ps-0" style="list-style-type: none;">
+                                    @foreach (var modelStateEntry in ModelState.Values)
+                                    {
+                                        foreach (var error in modelStateEntry.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                    <div class="mb-3">
+                        <label asp-for="CSupplier.Name" class="form-label fw-medium">Tên nhà cung cấp</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-building"></i></span>
+                            <input asp-for="CSupplier.Name" class="form-control" type="text" required 
+                                   placeholder="Nhập tên nhà cung cấp" />
+                        </div>
+                        <span asp-validation-for="CSupplier.Name" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CSupplier.PhoneNumber" class="form-label fw-medium">Số Điện Thoại</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-phone"></i></span>
+                            <input asp-for="CSupplier.PhoneNumber" class="form-control" required pattern="[0-9]{10}" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" maxlength="10" 
+                                   placeholder="Nhập số điện thoại" />
+                        </div>
+                        <div class="form-text"><i class="fas fa-info-circle me-1"></i>Số điện thoại phải chứa đúng 10 chữ số.</div>
+                        <span asp-validation-for="CSupplier.PhoneNumber" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CSupplier.ContactEmail" class="form-label fw-medium">Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-envelope"></i></span>
+                            <input asp-for="CSupplier.ContactEmail" class="form-control" type="email" required 
+                                   oninput="this.value = this.value.replace(/\s+/g, '');"
+                                   placeholder="example@domain.com" />
+                        </div>
+                        <div class="form-text"><i class="fas fa-info-circle me-1"></i>Email phải chứa ký tự @@.</div>
+                        <span asp-validation-for="CSupplier.ContactEmail" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-enhanced btn-enhanced-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Đóng
+                    </button>
+                    <button type="submit" class="btn btn-enhanced btn-enhanced-success">
+                        <i class="fas fa-save me-1"></i> Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xóa Nhà Cung Cấp -->
+<div class="modal fade" id="deleteSupplierModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow enhanced-card">
+            <form method="post" asp-page-handler="Delete">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Xác Nhận Xóa</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <input type="hidden" id="deleteSupplierId" name="SupplierId" />
+                    <div class="mb-4">
+                        <div class="text-danger p-3 rounded-circle d-inline-block" style="background-color: rgba(231, 76, 60, 0.1);">
+                            <i class="fas fa-trash-alt fa-3x"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-3">Bạn có chắc chắn muốn xóa?</h4>
+                    <p class="lead mb-1">Nhà cung cấp <strong id="deleteSupplierName"></strong> sẽ bị xóa vĩnh viễn.</p>
+                    <p class="text-danger mb-0"><i class="fas fa-exclamation-circle me-1"></i>Hành động này không thể hoàn tác!</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-enhanced btn-enhanced-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-enhanced btn-enhanced-danger">
+                        <i class="fas fa-trash me-1"></i> Xóa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Lô Hàng -->
+<div class="modal fade" id="shipmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow enhanced-card">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">
+                    <i class="fas fa-truck me-2 text-primary"></i>Lô Hàng Của 
+                    <span id="shipmentSupplierName" class="fw-bold"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="shipmentsList" class="px-2">
+                    <!-- Shipments will be loaded here -->
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Đang tải thông tin lô hàng...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-enhanced btn-enhanced-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<template id="shipmentTemplate">
+    <div class="enhanced-card mb-3 shipment-card border-0 shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
+            <div>
+                <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                <strong>Ngày Gửi:</strong> <span class="ship-date badge bg-info text-dark ms-1"></span>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="details-count me-3 badge bg-secondary rounded-pill"></span>
+                <button class="btn btn-sm btn-enhanced btn-enhanced-secondary toggle-details">
+                    <i class="fas fa-chevron-down me-1"></i> Xem Chi Tiết
+                </button>
+            </div>
+        </div>
+        <div class="card-body shipment-details p-0" style="display: none;">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-3 py-2">Tên Thuốc</th>
+                            <th class="px-3 py-2">Giá</th>
+                            <th class="px-3 py-2">Số Lượng</th>
+                            <th class="px-3 py-2">Tổng Chi Phí</th>
+                            <th class="px-3 py-2">Ngày Hết Hạn</th>
+                        </tr>
+                    </thead>
+                    <tbody class="details-container">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Chi Tiết Lô Hàng -->
+<template id="detailRowTemplate">
+    <tr class="detail-row">
+        <td class="px-3 py-2">
+            <div class="d-flex align-items-center">
+                <div class="bg-light rounded-circle p-1 me-2">
+                    <i class="fas fa-pills text-primary"></i>
+                </div>
+                <span class="medical-name fw-medium"></span>
+            </div>
+        </td>
+        <td class="px-3 py-2">
+            <span class="price text-secondary"></span>
+        </td>
+        <td class="px-3 py-2 text-center">
+            <span class="badge bg-secondary rounded-pill px-3 py-2 quantity"></span>
+        </td>
+        <td class="px-3 py-2">
+            <span class="total-cost fw-bold text-success"></span>
+        </td>
+        <td class="px-3 py-2">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-calendar-times text-warning me-2"></i>
+                <span class="expired-date"></span>
+            </div>
+        </td>
+    </tr>
+</template>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Form validation
+            (function() {
+                'use strict';
+                var forms = document.querySelectorAll('.needs-validation');
+                Array.from(forms).forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            })();
+            
+            @if (!ModelState.IsValid)
+            {
+                string formWithErrors = TempData["FormWithErrors"]?.ToString();
+                <text>
+                    $('#@formWithErrors').modal('show');
+                </text>
+            }
+
+            // Add custom validation for phone number and email
+            function validateForm(formId) {
+                const form = document.getElementById(formId);
+                let isValid = true;
+                
+                // Validate phone number
+                const phoneInput = form.querySelector('input[name="CSupplier.PhoneNumber"]');
+                const phoneError = phoneInput.nextElementSibling.nextElementSibling;
+                
+                // Remove spaces from phone number
+                phoneInput.value = phoneInput.value.replace(/\s+/g, '');
+                
+                if (!/^\d{10}$/.test(phoneInput.value)) {
+                    phoneError.textContent = "Số điện thoại phải có đúng 10 chữ số và chỉ chứa các số từ 0-9.";
+                    isValid = false;
+                } else {
+                    phoneError.textContent = "";
+                }
+                
+                // Validate email
+                const emailInput = form.querySelector('input[name="CSupplier.ContactEmail"]');
+                const emailError = emailInput.nextElementSibling.nextElementSibling;
+                const atSymbol = String.fromCharCode(64);
+                
+                if (!emailInput.value.includes(atSymbol)) {
+                    emailError.textContent = "Email phải chứa ký tự @@";
+                    isValid = false;
+                } else if (emailInput.value.includes(" ")) {
+                    emailError.textContent = "Email không được chứa khoảng trắng";
+                    isValid = false;
+                } else {
+                    emailError.textContent = "";
+                }
+                
+                return isValid;
+            }
+
+            // Submit handling with loading indicator
+            $('#createSupplierForm').on('submit', function (e) {
+                if (!validateForm('createSupplierForm')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                var $submitBtn = $(this).find('button[type="submit"]');
+                $submitBtn.prop('disabled', true);
+                $submitBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý...');
+                
+                $(this).attr('action', '?handler=Create');
+                return true;
+            });
+
+            $('#updateSupplierForm').on('submit', function (e) {
+                if (!validateForm('updateSupplierForm')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                var $submitBtn = $(this).find('button[type="submit"]');
+                $submitBtn.prop('disabled', true);
+                $submitBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý...');
+                
+                $(this).attr('action', '?handler=Update');
+                return true;
+            });
+
+            // Reset form on modal close
+            $('#addSupplierModal').on('hidden.bs.modal', function () {
+                $('#createSupplierForm').trigger('reset');
+                $('.text-danger').empty();
+                $('.alert-danger').remove();
+                $('#createSupplierForm').removeClass('was-validated');
+            });
+
+            // Auto-hide success alerts
+            setTimeout(function () {
+                $('.alert-success').fadeOut('slow');
+            }, 5000);
+
+            // Populate update modal
+            $('.btn-update-supplier').on('click', function () {
+                var supplierId = $(this).data('supplier-id');
+                var name = $(this).data('supplier-name');
+                var phoneNumber = $(this).data('supplier-phone');
+                var email = $(this).data('supplier-email');
+
+                $('#CSupplier_Id').val(supplierId);
+                $('#CSupplier_Name').val(name);
+                $('#CSupplier_PhoneNumber').val(phoneNumber);
+                $('#CSupplier_ContactEmail').val(email);
+            });
+
+            // Reset update modal
+            $('#updateSupplierModal').on('hidden.bs.modal', function () {
+                $(this).find('form').trigger('reset');
+                $('.text-danger').empty();
+                $('.alert-danger').remove();
+                $('#updateSupplierForm').removeClass('was-validated');
+            });
+
+            // Populate delete modal
+            $('.delete-supplier-btn').on('click', function () {
+                var row = $(this).closest('tr');
+                var supplierId = $(this).data('supplier-id');
+                var supplierName = $(this).data('supplier-name');
+
+                $('#deleteSupplierId').val(supplierId);
+                $('#deleteSupplierName').text(supplierName);
+            });
+
+            // Reset delete modal
+            $('#deleteSupplierModal').on('hidden.bs.modal', function () {
+                $('#deleteSupplierId').val('');
+                $('#deleteSupplierName').text('');
+            });
+
+            // Load shipments
+            $('.view-shipments').on('click', function () {
+                var supplierId = $(this).data('supplier-id');
+                var supplierName = $(this).data('supplier-name');
+
+                $('#shipmentSupplierName').text(supplierName);
+                loadShipments(supplierId);
+                $('#shipmentModal').modal('show');
+            });
+
+            function loadShipments(supplierId) {
+                $('#shipmentsList').html(`
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Đang tải thông tin lô hàng...</p>
+                    </div>
+                `);
+
+                // Simulate loading delay for better UX
+                setTimeout(function() {
+                    var supplier = @Html.Raw(Json.Serialize(Model.Suppliers))
+                                .find(s => s.id === supplierId);
+
+                    if (supplier && supplier.shipment && supplier.shipment.length > 0) {
+                        // First clear the shipments list
+                        $('#shipmentsList').empty();
+                        
+                        // Add summary header
+                        var shipmentCount = supplier.shipment.length;
+                        
+                        // Calculate date range if we have shipments
+                        var dates = supplier.shipment.map(s => new Date(s.shipDate));
+                        var earliestDate = new Date(Math.min.apply(null, dates));
+                        var latestDate = new Date(Math.max.apply(null, dates));
+                        
+                        var dateRangeText = '';
+                        if (dates.length > 0) {
+                            var earliestFormatted = formatDate(earliestDate);
+                            var latestFormatted = formatDate(latestDate);
+                            
+                            if (earliestFormatted === latestFormatted) {
+                                dateRangeText = earliestFormatted;
+                            } else {
+                                dateRangeText = earliestFormatted + ' - ' + latestFormatted;
+                            }
+                        }
+                        
+                        var summaryHtml = `
+                            <div class="alert alert-info mb-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-info-circle me-3 fs-4"></i>
+                                    <div>
+                                        <p class="mb-1"><strong>${shipmentCount}</strong> lô hàng được tìm thấy</p>
+                                        ${dateRangeText ? `<p class="mb-0 small text-muted">Khoảng thời gian: ${dateRangeText}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        $('#shipmentsList').append(summaryHtml);
+                        
+                        // Then render each shipment
+                        supplier.shipment.forEach(function (shipment) {
+                            renderShipment(shipment);
+                        });
+                    } else {
+                        $('#shipmentsList').html(`
+                            <div class="text-center py-5">
+                                <div class="mb-3">
+                                    <i class="fas fa-truck fa-4x text-secondary opacity-50"></i>
+                                </div>
+                                <h5>Không tìm thấy lô hàng nào</h5>
+                                <p class="text-muted">Không có lô hàng nào cho nhà cung cấp này.</p>
+                            </div>
+                        `);
+                    }
+                }, 500);
+            }
+
+            function renderShipment(shipment) {
+                var template = document.getElementById('shipmentTemplate');
+                var shipmentElement = document.importNode(template.content, true);
+                var $shipment = $(shipmentElement);
+
+                $shipment.find('.ship-date').text(formatDate(shipment.shipDate));
+
+                if (shipment.shipmentDetails && shipment.shipmentDetails.length > 0) {
+                    var detailsContainer = $shipment.find('.details-container');
+                    var detailCount = shipment.shipmentDetails.length;
+                    
+                    // Add counter showing how many details this shipment has
+                    $shipment.find('.details-count').text(detailCount + ' sản phẩm');
+
+                    shipment.shipmentDetails.forEach(function (detail) {
+                        renderShipmentDetail(detailsContainer, detail);
+                    });
+                    
+                    // Add footer with details count if we have a large number of details
+                    if (detailCount > 5) {
+                        var footerRow = $('<tr class="bg-light border-top"></tr>');
+                        var footerCell = $('<td class="text-center py-2 text-muted small" colspan="5"></td>');
+                        footerCell.text('Đang hiển thị tất cả ' + detailCount + ' sản phẩm');
+                        footerRow.append(footerCell);
+                        detailsContainer.append(footerRow);
+                    }
+                } else {
+                    // No details found
+                    $shipment.find('.details-count').text('0 sản phẩm');
+                    $shipment.find('.shipment-details').html(`
+                        <div class="p-4 text-center">
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle mb-2 fs-3"></i>
+                                <p>Không có chi tiết nào cho lô hàng này.</p>
+                            </div>
+                        </div>
+                    `);
+                }
+
+                $shipment.find('.toggle-details').on('click', function () {
+                    var $btn = $(this);
+                    var $details = $btn.closest('.shipment-card').find('.shipment-details');
+
+                    if ($details.is(':visible')) {
+                        $details.slideUp(300);
+                        $btn.html('<i class="fas fa-chevron-down me-1"></i> Xem Chi Tiết');
+                    } else {
+                        $details.slideDown(300);
+                        $btn.html('<i class="fas fa-chevron-up me-1"></i> Ẩn Chi Tiết');
+                    }
+                });
+
+                // Append to DOM without emptying the container first
+                $('#shipmentsList').append($shipment[0]);
+            }
+
+            function renderShipmentDetail(container, detail) {
+                var template = document.getElementById('detailRowTemplate');
+                var detailElement = document.importNode(template.content, true);
+                var $detail = $(detailElement);
+
+                $detail.find('.medical-name').text(detail.medicalName || 'Không Có');
+                $detail.find('.price').text(formatCurrency(detail.price));
+                $detail.find('.quantity').text(detail.quantity);
+                $detail.find('.total-cost').text(formatCurrency(detail.price * detail.quantity));
+                $detail.find('.expired-date').text(formatDate(detail.expiredDate));
+
+                container.append($detail[0]);
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return 'Không Có';
+                var date = new Date(dateString);
+                return date.toLocaleDateString('vi-VN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+            }
+
+            function formatCurrency(value) {
+                if (!value) return '0 ₫';
+                return new Intl.NumberFormat('vi-VN', { 
+                    style: 'currency', 
+                    currency: 'VND',
+                    maximumFractionDigits: 0 
+                }).format(value);
+            }
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
+}

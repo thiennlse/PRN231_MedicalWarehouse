@@ -1,0 +1,13 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.LogoutModel
+@{
+}
+
+<script>
+    // Chỉ xóa dữ liệu giỏ hàng trong localStorage
+    localStorage.removeItem('cart');
+    console.log("Đã xóa giỏ hàng khi đăng xuất");
+    
+    // Redirect to login page
+    window.location.href = '/Login';
+</script>

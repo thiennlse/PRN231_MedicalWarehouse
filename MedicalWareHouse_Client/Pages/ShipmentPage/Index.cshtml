@@ -1,0 +1,515 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.ShipmentPage.IndexModel
+
+@{
+    ViewData["Title"] = "Danh Sách Lô Hàng";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid py-4">
+    <!-- Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">Quản Lý Lô Hàng</h2>
+            <p class="text-muted">Theo dõi và quản lý tất cả lô hàng của bạn</p>
+        </div>
+        <a asp-page="Create" class="btn btn-primary d-flex align-items-center">
+            <i class="fas fa-plus-circle me-2"></i> Tạo Lô Hàng Mới
+        </a>
+    </div>
+
+    <!-- Error message display -->
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i> @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search Results Banner (if search is active) -->
+    @if (!string.IsNullOrEmpty(Model.SearchByName))
+    {
+        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-search me-2"></i> 
+                    <strong>Kết quả tìm kiếm cho "@Model.SearchByName":</strong> 
+                    Tìm thấy @Model.TotalShipments lô hàng
+                </div>
+                <a asp-page="Index" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-times me-1"></i> Xóa bộ lọc
+                </a>
+            </div>
+        </div>
+    }
+
+    <!-- Stats Cards Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="stats-icon bg-primary text-white me-3">
+                        <i class="fas fa-truck fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1">@Model.TotalShipments</h3>
+                        <p class="text-muted mb-0">Tổng Số Lô Hàng</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="stats-icon bg-success text-white me-3">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1">@(Model.listShipment.Count())</h3>
+                        <p class="text-muted mb-0">Lô Hàng Đã Xử Lý</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stats-card border-0 shadow-sm h-100">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="stats-icon bg-info text-white me-3">
+                        <i class="fas fa-calendar-alt fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1">@DateTime.Now.ToString("MMM yyyy")</h3>
+                        <p class="text-muted mb-0">Thời Gian Hiện Tại</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-primary">
+                <i class="fas fa-list me-2"></i> Danh Sách Lô Hàng
+            </h5>
+            <!-- Improved Search Form -->
+            <form method="get" class="search-form" id="searchForm">
+                <div class="input-group">
+                    <input type="text" 
+                           id="SearchByName" 
+                           name="searchTerm" 
+                           value="@Model.SearchByName" 
+                           class="form-control" 
+                           placeholder="Nhập mã hoặc tên lô hàng..." 
+                           autocomplete="off"
+                           autofocus>
+                    <button type="submit" class="btn btn-primary" id="searchButton">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <small class="form-text text-muted mt-1 search-hint">
+                    <i class="fas fa-info-circle me-1"></i> Nhập chính xác mã lô hàng để tìm kiếm chính xác
+                </small>
+            </form>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3">Mã Lô Hàng</th>
+                            <th class="py-3">Khu Vực</th>
+                            <th class="py-3">Nhà Cung Cấp</th>
+                            <th class="py-3">Ngày Gửi</th>
+                            <th class="py-3 text-center">Chức Năng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.listShipment.Any())
+                        {
+                            @foreach (var item in Model.listShipment.OrderByDescending(s => s.ShipDate))
+                            {
+                                <tr class="shipment-row" data-id="@item.ShipmentId">
+                                    <td class="fw-bold">@item.Name</td>
+                                    <td>
+                                        <span class="area-badge">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            @(Model.AreaNames.ContainsKey(item.AreaId.ToString()) ? Model.AreaNames[item.AreaId.ToString()] : "Không Xác Định")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="supplier-name">
+                                            <i class="fas fa-building me-1"></i>
+                                            @(Model.SupplierNames.ContainsKey(item.SupplierId.ToString()) ? Model.SupplierNames[item.SupplierId.ToString()] : "Không Xác Định")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="date-badge">
+                                            <i class="far fa-calendar-alt me-1"></i>
+                                            @item.ShipDate.ToString("dd/MM/yyyy")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-page="Edit" asp-route-id="@item.ShipmentId" class="btn btn-sm btn-outline-warning" title="Chỉnh Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-page="Details" asp-route-id="@item.ShipmentId" class="btn btn-sm btn-outline-info" title="Xem Chi Tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-page="Delete" asp-route-id="@item.ShipmentId" class="btn btn-sm btn-outline-danger delete-btn" title="Xóa">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="empty-state">
+                                        @if (!string.IsNullOrEmpty(Model.SearchByName))
+                                        {
+                                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                            <h5>Không tìm thấy kết quả</h5>
+                                            <p class="text-muted">Không tìm thấy lô hàng nào khớp với từ khóa "@Model.SearchByName"</p>
+                                            <a asp-page="Index" class="btn btn-sm btn-outline-primary mt-2">
+                                                <i class="fas fa-sync-alt me-1"></i> Xem tất cả lô hàng
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                            <h5>Không có lô hàng nào</h5>
+                                            <p class="text-muted">Hãy thêm lô hàng mới hoặc thử tìm kiếm với từ khóa khác</p>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (!string.IsNullOrEmpty(Model.SearchByName) && Model.TotalPages > 0)
+            {
+                <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                    <small class="text-muted">Hiển thị @(((Model.CurrentPage - 1) * Model.PageSize) + 1) đến @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalShipments)) trong tổng số @Model.TotalShipments lô hàng</small>
+                    <nav aria-label="Phân trang">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Page("Index", new { page = Model.CurrentPage - 1, searchTerm = Model.SearchByName })" aria-label="Trước">
+                                    <span aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                                </a>
+                            </li>
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                                    <a class="page-link" href="@Url.Page("Index", new { page = i, searchTerm = Model.SearchByName })">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Page("Index", new { page = Model.CurrentPage + 1, searchTerm = Model.SearchByName })" aria-label="Tiếp">
+                                    <span aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" integrity="sha512-Tn2m0TIpgVyTzzvmxLNuqbSJH3JP8jm+Cy3hvHrW7ndTDcJ1w5mBiksqDBb8GpE2ksktFvDB/ykZ0mDpsZj20w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <script>
+        // Document Ready Function
+        document.addEventListener("DOMContentLoaded", function () {
+            // Display Toast notifications
+            const successToast = document.getElementById('successToast');
+            const errorToast = document.getElementById('errorToast');
+
+            if (successToast) {
+                const toast = new bootstrap.Toast(successToast);
+                toast.show();
+            }
+
+            if (errorToast) {
+                const toast = new bootstrap.Toast(errorToast);
+                toast.show();
+            }
+            
+            // Auto-focus search field
+            const searchInput = document.getElementById('SearchByName');
+            if (searchInput) {
+                searchInput.focus();
+                
+                // Select all text when focused
+                searchInput.addEventListener('focus', function() {
+                    this.select();
+                });
+            }
+            
+            // Button hover effects
+            const actionButtons = document.querySelectorAll('.btn-sm');
+            actionButtons.forEach(btn => {
+                btn.addEventListener('mouseover', function() {
+                    if (this.classList.contains('btn-outline-warning')) {
+                        this.classList.remove('btn-outline-warning');
+                        this.classList.add('btn-warning');
+                    } else if (this.classList.contains('btn-outline-info')) {
+                        this.classList.remove('btn-outline-info');
+                        this.classList.add('btn-info');
+                    } else if (this.classList.contains('btn-outline-danger')) {
+                        this.classList.remove('btn-outline-danger');
+                        this.classList.add('btn-danger');
+                    } else if (this.classList.contains('btn-outline-primary')) {
+                        this.classList.remove('btn-outline-primary');
+                        this.classList.add('btn-primary');
+                    }
+                });
+                
+                btn.addEventListener('mouseout', function() {
+                    if (this.classList.contains('btn-warning')) {
+                        this.classList.remove('btn-warning');
+                        this.classList.add('btn-outline-warning');
+                    } else if (this.classList.contains('btn-info')) {
+                        this.classList.remove('btn-info');
+                        this.classList.add('btn-outline-info');
+                    } else if (this.classList.contains('btn-danger')) {
+                        this.classList.remove('btn-danger');
+                        this.classList.add('btn-outline-danger');
+                    } else if (this.classList.contains('btn-primary')) {
+                        this.classList.remove('btn-primary');
+                        this.classList.add('btn-outline-primary');
+                    }
+                });
+            });
+            
+            // Make table rows clickable
+            const shipmentRows = document.querySelectorAll('.shipment-row');
+            shipmentRows.forEach(row => {
+                row.addEventListener('click', function(e) {
+                    if (!e.target.closest('a')) {
+                        const id = this.getAttribute('data-id');
+                        window.location.href = '/ShipmentPage/Details?id=' + id;
+                    }
+                });
+            });
+            
+            // Enhance search functionality
+            const searchForm = document.getElementById('searchForm');
+            const searchInput = document.getElementById('SearchByName');
+            
+            // Clear search on Escape key
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    window.location.href = '/ShipmentPage/Index';
+                }
+            });
+            
+            // Show loading state when searching
+            searchForm.addEventListener('submit', function(e) {
+                // Trim the search input to remove whitespace
+                searchInput.value = searchInput.value.trim();
+                
+                // Don't submit if empty after trimming
+                if (searchInput.value === '') {
+                    e.preventDefault();
+                    window.location.href = '/ShipmentPage/Index';
+                    return false;
+                }
+                
+                const searchButton = document.getElementById('searchButton');
+                searchButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                searchButton.disabled = true;
+                
+                return true;
+            });
+        });
+    </script>
+
+    <!-- CSS Tùy Chỉnh -->
+    <style>
+        /* General Styling */
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        /* Card Styling */
+        .card {
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .stats-card {
+            cursor: pointer;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Table Styling */
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .table th {
+            font-weight: 600;
+            color: #495057;
+            letter-spacing: 0.5px;
+            border-top: none;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .shipment-row {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .shipment-row:hover {
+            background-color: rgba(13, 110, 253, 0.05) !important;
+            transform: scale(1.005);
+        }
+        
+        /* Badges */
+        .area-badge, .date-badge, .supplier-name {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 0.25rem 0;
+        }
+        
+        .date-badge {
+            color: #6c757d;
+        }
+        
+        /* Button styling */
+        .btn-sm {
+            border-radius: 0.5rem;
+            padding: 0.375rem 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 123, 255, 0.2);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+        }
+        
+        /* Alert styling */
+        .alert {
+            border-radius: 0.75rem;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .alert-info {
+            background-color: #e3f2fd;
+            color: #0c63e4;
+        }
+        
+        .alert-danger {
+            background-color: #feecf0;
+            color: #cc0033;
+        }
+        
+        /* Search form */
+        .search-form .input-group {
+            width: 300px;
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .search-form .form-control {
+            border-right: none;
+            padding-left: 15px;
+            border-top-left-radius: 50px;
+            border-bottom-left-radius: 50px;
+        }
+        
+        .search-form .btn {
+            border-top-right-radius: 50px;
+            border-bottom-right-radius: 50px;
+            padding-right: 15px;
+        }
+        
+        .search-hint {
+            font-size: 0.75rem;
+            display: block;
+            text-align: right;
+            padding-right: 10px;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        /* Pagination */
+        .pagination .page-link {
+            border-radius: 0.25rem;
+            margin: 0 2px;
+            color: #007bff;
+            border: 1px solid #dee2e6;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border-color: #0056b3;
+        }
+        
+        .pagination .page-link:hover {
+            background-color: #f8f9fa;
+            z-index: 2;
+        }
+        
+        /* Animation for new elements */
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card, .btn, .table, .alert {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+}

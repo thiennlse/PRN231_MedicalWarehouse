@@ -1,0 +1,319 @@
+﻿@page "{id}"
+@model MedicalWareHouse_Client.Pages.ShipmentPage.EditModel
+@{
+    ViewData["Title"] = "Chỉnh Sửa Lô Hàng";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 fw-bold text-primary mb-1">
+                        <i class="fas fa-edit me-2"></i>Chỉnh Sửa Lô Hàng
+                    </h1>
+                    <p class="text-muted">Cập nhật thông tin chi tiết về lô hàng</p>
+                </div>
+                <a asp-page="./Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay Lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow border-0 rounded-lg mb-4">
+        <div class="card-header bg-gradient bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Thông Tin Lô Hàng</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" class="needs-validation" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3 fw-bold" role="alert"></div>
+
+                <input type="hidden" name="shipmentId" value="@Model.ShipmentId" />
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="ShipmentRequest.AreaId" class="form-label fw-bold">
+                            <i class="fas fa-map-marker-alt me-1"></i>Khu Vực
+                        </label>
+                        <select asp-for="ShipmentRequest.AreaId" class="form-select shadow-sm" asp-items="Model.Areas" required>
+                            <option value="">-- Chọn Khu Vực --</option>
+                        </select>
+                        <div class="invalid-feedback">Vui lòng chọn khu vực.</div>
+                        <span asp-validation-for="ShipmentRequest.AreaId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ShipmentRequest.SupplierId" class="form-label fw-bold">
+                            <i class="fas fa-building me-1"></i>Nhà Cung Cấp
+                        </label>
+                        <select asp-for="ShipmentRequest.SupplierId" class="form-select shadow-sm" asp-items="Model.Suppliers" required>
+                            <option value="">-- Chọn Nhà Cung Cấp --</option>
+                        </select>
+                        <div class="invalid-feedback">Vui lòng chọn nhà cung cấp.</div>
+                        <span asp-validation-for="ShipmentRequest.SupplierId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label asp-for="ShipmentRequest.ShipDate" class="form-label fw-bold">
+                        <i class="fas fa-calendar-alt me-1"></i>Ngày Gửi
+                    </label>
+                    <input asp-for="ShipmentRequest.ShipDate" class="form-control shadow-sm" type="datetime-local" required />
+                    <div class="invalid-feedback">Vui lòng chọn ngày gửi hàng.</div>
+                    <span asp-validation-for="ShipmentRequest.ShipDate" class="text-danger"></span>
+                </div>
+
+                <div class="mt-4 mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="text-primary"><i class="fas fa-boxes me-2"></i>Chi Tiết Lô Hàng</h4>
+                        <button type="button" id="addDetail" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Thêm Sản Phẩm
+                        </button>
+                    </div>
+                    <hr class="my-2">
+                </div>
+
+                <div id="shipmentDetailsContainer" class="border rounded-3 p-3 shadow-sm bg-light">
+                    @if (Model.ShipmentRequest.ShipmentDetails != null)
+                    {
+                        @for (int i = 0; i < Model.ShipmentRequest.ShipmentDetails.Count; i++)
+                        {
+                            <div class="shipment-detail mb-3 p-3 border rounded-3 bg-white shadow-sm">
+                                <div class="row g-3">
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-prescription-bottle-alt me-1"></i>Sản Phẩm Y Tế
+                                        </label>
+                                        <select name="ShipmentRequest.ShipmentDetails[@i].MedicalId" class="form-select" required>
+                                            <option value="">-- Chọn Sản Phẩm Y Tế --</option>
+                                            @foreach (var medical in Model.Medicals)
+                                            {
+                                                <option value="@medical.Value" selected="@(medical.Value == Model.ShipmentRequest.ShipmentDetails[i].MedicalId.ToString() ? "selected" : null)">@medical.Text</option>
+                                            }
+                                        </select>
+                                        <div class="invalid-feedback">Vui lòng chọn sản phẩm y tế.</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-sort-numeric-up-alt me-1"></i>Số Lượng
+                                        </label>
+                                        <input name="ShipmentRequest.ShipmentDetails[@i].Quantity" type="number" class="form-control" value="@Model.ShipmentRequest.ShipmentDetails[i].Quantity" min="1" required />
+                                        <div class="invalid-feedback">Số lượng phải lớn hơn 0.</div>
+                                    </div>
+                                    <input type="hidden" name="ShipmentRequest.ShipmentDetails[@i].ExpiredDate" value="@Model.ShipmentRequest.ShipmentDetails[i].ExpiredDate.ToString("s")" />
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger w-100 remove-detail">
+                                            <i class="fas fa-trash-alt me-1"></i> Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Lưu ý:</strong> Hãy chắc chắn thông tin chỉnh sửa đã chính xác trước khi lưu.
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a asp-page="./Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Hủy
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu Thay Đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <script>
+        // Form validation
+        (() => {
+            'use strict'
+            const forms = document.querySelectorAll('.needs-validation')
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+
+        // Add new detail
+        document.getElementById('addDetail').addEventListener('click', function () {
+            let container = document.getElementById('shipmentDetailsContainer');
+            let index = container.getElementsByClassName('shipment-detail').length;
+            let medicalOptions = document.querySelector('select[name^="ShipmentRequest.ShipmentDetails"]').innerHTML;
+            let currentDateTime = new Date().toISOString().slice(0, 16);
+
+            let html = `
+                <div class="shipment-detail mb-3 p-3 border rounded-3 bg-white shadow-sm new-item">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-prescription-bottle-alt me-1"></i>Sản Phẩm Y Tế
+                            </label>
+                            <select name="ShipmentRequest.ShipmentDetails[${index}].MedicalId" class="form-select" required>
+                                ${medicalOptions}
+                            </select>
+                            <div class="invalid-feedback">Vui lòng chọn sản phẩm y tế.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-sort-numeric-up-alt me-1"></i>Số Lượng
+                            </label>
+                            <input name="ShipmentRequest.ShipmentDetails[${index}].Quantity" type="number" class="form-control" min="1" required />
+                            <div class="invalid-feedback">Số lượng phải lớn hơn 0.</div>
+                        </div>
+                        <input type="hidden" name="ShipmentRequest.ShipmentDetails[${index}].ExpiredDate" value="${currentDateTime}" />
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger w-100 remove-detail">
+                                <i class="fas fa-trash-alt me-1"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            
+            // Scroll to the new item
+            const newItem = container.querySelector('.new-item:last-child');
+            if (newItem) {
+                newItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Remove the class after animation
+                setTimeout(() => {
+                    newItem.classList.remove('new-item');
+                }, 500);
+            }
+        });
+
+        // Remove detail
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('.remove-detail')) {
+                let detail = e.target.closest('.shipment-detail');
+                detail.classList.add('fade-out');
+                setTimeout(() => {
+                    detail.remove();
+                    reindexDetails();
+                }, 300);
+            }
+        });
+
+        function reindexDetails() {
+            let details = document.getElementsByClassName('shipment-detail');
+            for (let i = 0; i < details.length; i++) {
+                details[i].querySelector('select[name$=".MedicalId"]').name = `ShipmentRequest.ShipmentDetails[${i}].MedicalId`;
+                details[i].querySelector('input[name$=".Quantity"]').name = `ShipmentRequest.ShipmentDetails[${i}].Quantity`;
+                details[i].querySelector('input[name$=".ExpiredDate"]').name = `ShipmentRequest.ShipmentDetails[${i}].ExpiredDate`;
+            }
+        }
+    </script>
+
+    <style>
+        /* Animation styles */
+        .shipment-detail {
+            transition: all 0.3s ease;
+        }
+        
+        .fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        
+        .new-item {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Form element styling */
+        .form-control, .form-select {
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .btn {
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #0d6efd, #0a58ca);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #0a58ca, #0d6efd);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #dc3545, #b02a37);
+            border: none;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(45deg, #b02a37, #dc3545);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-outline-secondary {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Card styling */
+        .card {
+            overflow: hidden;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .card-header {
+            border-bottom: none;
+            padding: 1rem 1.5rem;
+        }
+        
+        .bg-gradient {
+            background: linear-gradient(45deg, #0d6efd, #0a58ca) !important;
+        }
+    </style>
+}

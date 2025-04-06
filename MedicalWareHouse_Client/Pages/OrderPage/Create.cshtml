@@ -1,0 +1,372 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.OrderPage.CreateModel
+@using MedicalWarehouse_BusinessObject.Enums
+
+@{
+    ViewData["Title"] = "Tạo Đơn Hàng Mới";
+}
+
+@await Html.PartialAsync("_EnhancedUI")
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="enhanced-card fade-in">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title"><i class="fas fa-file-invoice me-2 text-primary"></i>Tạo Đơn Hàng Mới</h3>
+                        <a asp-page="Index" class="btn btn-enhanced btn-enhanced-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay Lại
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="orderForm" class="needs-validation enhanced-form" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+                        <div class="section-separator">
+                            <h3><i class="fas fa-info-circle me-2"></i>Chi Tiết Đơn Hàng</h3>
+                        </div>
+
+                        <div class="row">
+                            <!-- Thông Tin Đơn Hàng -->
+                            <div class="col-md-4">
+                                <div class="enhanced-card h-100">
+                                    <div class="card-header bg-white">
+                                        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2 text-secondary"></i>Thông Tin Đơn Hàng</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold">Loại Đơn Hàng</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light"><i class="fas fa-tags"></i></span>
+                                                <input type="text" class="form-control"
+                                                       value="@(Model.OrderRequest.Type == OrderType.Import ? "Nhập Kho" : "Xuất Kho")" readonly />
+                                            </div>
+                                            <input type="hidden" asp-for="OrderRequest.Type" />
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold">Trạng Thái</label>
+                                            <div class="status-badge status-ordered w-100 text-center">
+                                                <i class="fas fa-circle me-1"></i> Đã Đặt Hàng
+                                            </div>
+                                            <input type="hidden" asp-for="OrderRequest.Status" value="@OrderStatus.ORDERED" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chi Tiết Đơn Hàng -->
+                            <div class="col-md-8">
+                                <div class="enhanced-card h-100">
+                                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0"><i class="fas fa-list-alt me-2 text-secondary"></i>Sản Phẩm</h5>
+                                        <button type="button" class="btn btn-enhanced btn-enhanced-primary" id="addItem">
+                                            <i class="fas fa-plus"></i> Thêm Sản Phẩm
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="orderDetails" class="order-details-container"></div>
+                                        <div id="noItemsMessage" class="text-center text-muted py-5">
+                                            <div class="mb-3">
+                                                <i class="fas fa-box fa-4x text-secondary opacity-50"></i>
+                                            </div>
+                                            <h5>Chưa có sản phẩm nào</h5>
+                                            <p class="text-muted">Nhấp vào "Thêm Sản Phẩm" để bắt đầu tạo đơn hàng.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nút Hành Động -->
+                        <div class="row mt-4">
+                            <div class="col-12 d-flex justify-content-between">
+                                <a asp-page="Index" class="btn btn-enhanced btn-enhanced-secondary">
+                                    <i class="fas fa-arrow-left"></i> Quay Lại
+                                </a>
+                                <button type="submit" class="btn btn-enhanced btn-enhanced-success" id="submitButton" disabled>
+                                    <i class="fas fa-save"></i> Tạo Đơn Hàng
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Hidden field to track the order details -->
+                        <input type="hidden" id="orderDetailsCount" name="orderDetailsCount" value="0" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            let detailCounter = 0;
+            const selectedMedicals = new Set();
+            let initialOrderDetails = [];
+
+            // Cache DOM elements
+            const $orderDetails = $('#orderDetails');
+            const $noItemsMessage = $('#noItemsMessage');
+            const $submitButton = $('#submitButton');
+            const $orderDetailsCount = $('#orderDetailsCount');
+
+            // Lấy dữ liệu từ Model nếu có
+            @if (Model.OrderRequest.OrderDetail != null && Model.OrderRequest.OrderDetail.Any())
+            {
+                <text>
+                // Có dữ liệu từ giỏ hàng
+                initialOrderDetails = [
+                    @foreach (var detail in Model.OrderRequest.OrderDetail)
+                    {
+                        <text>
+                        {
+                            medicalId: "@detail.MedicalId",
+                            quantity: @detail.Quantity
+                        },
+                        </text>
+                    }
+                ];
+                console.log("Loaded initial order details:", initialOrderDetails);
+                </text>
+            }
+
+            // Initial UI setup
+            updateUIState();
+            
+            // Nếu có dữ liệu từ giỏ hàng, thêm các sản phẩm đó vào form
+            if (initialOrderDetails.length > 0) {
+                initialOrderDetails.forEach(detail => {
+                    addNewOrderDetail(detail.medicalId, detail.quantity);
+                });
+            } else {
+                // Nếu không có dữ liệu, thêm một dòng trống
+                addNewOrderDetail();
+            }
+
+            // Add new order detail
+            $('#addItem').click(function () {
+                console.log("Add Item button clicked!");
+                addNewOrderDetail();
+            });
+
+            function addNewOrderDetail(medicalId = '', quantity = 1) {
+                console.log("Adding new order detail, counter:", detailCounter);
+                const detailHtml = `
+                            <div class="order-detail-item fade-in" data-index="${detailCounter}">
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold">Sản Phẩm Y Tế</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light"><i class="fas fa-pills"></i></span>
+                                                <select name="OrderRequest.OrderDetail[${detailCounter}].MedicalId"
+                                                        class="form-select medical-select"
+                                                        data-index="${detailCounter}"
+                                                        required>
+                                                    <option value="">-- Chọn Sản Phẩm Y Tế --</option>
+        @foreach (var item in (SelectList)ViewData["MedicalItems"])
+        {
+                                                <option value="@item.Value">@item.Text</option>
+        }
+                                                </select>
+                                            </div>
+                                            <div class="invalid-feedback">Hãy chọn một sản phẩm y tế.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label fw-bold">Số Lượng</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light"><i class="fas fa-hashtag"></i></span>
+                                                <input type="number"
+                                                       name="OrderRequest.OrderDetail[${detailCounter}].Quantity"
+                                                       class="form-control quantity-input"
+                                                       required
+                                                       min="1"
+                                                       value="${quantity}" />
+                                                <button type="button" class="btn btn-outline-secondary increment-btn">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary decrement-btn">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                            </div>
+                                            <div class="invalid-feedback">Hãy thêm số lượng (ít nhất là 1).</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label d-block">&nbsp;</label>
+                                            <button type="button" class="btn btn-enhanced btn-enhanced-danger w-100 remove-item">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+
+                $orderDetails.append(detailHtml);
+                const $newSelect = $orderDetails.find('.medical-select').last();
+                
+                // Nếu có ID, cập nhật select box
+                if (medicalId) {
+                    $newSelect.val(medicalId);
+                    selectedMedicals.add(medicalId);
+                    $newSelect.data('previous-value', medicalId);
+                }
+                
+                detailCounter++;
+                console.log("New detail added, total items:", $orderDetails.find('.order-detail-item').length);
+                updateUIState();
+
+                // Initialize Select2 for the new select element
+                initializeSelect2($newSelect);
+            }
+
+            // Remove order detail
+            $orderDetails.on('click', '.remove-item', function () {
+                const $item = $(this).closest('.order-detail-item');
+                const medicalId = $item.find('.medical-select').val();
+                if (medicalId) selectedMedicals.delete(medicalId);
+                $item.fadeOut(300, function() {
+                    $(this).remove();
+                    reindexOrderDetails();
+                    updateUIState();
+                });
+            });
+
+            // Prevent duplicate medical selections
+            $orderDetails.on('change', '.medical-select', function () {
+                const $select = $(this);
+                const newValue = $select.val();
+                const oldValue = $select.data('previous-value') || '';
+
+                if (!newValue) return;
+
+                if (selectedMedicals.has(newValue) && oldValue !== newValue) {
+                    alert('Sản phẩm này đã được chọn. Vui lòng chọn sản phẩm khác.');
+                    $select.val(oldValue);
+                    return;
+                }
+
+                if (oldValue) selectedMedicals.delete(oldValue);
+                if (newValue) {
+                    selectedMedicals.add(newValue);
+                    $select.data('previous-value', newValue);
+                }
+            });
+
+            // Increment quantity
+            $orderDetails.on('click', '.increment-btn', function () {
+                const $input = $(this).closest('.input-group').find('.quantity-input');
+                $input.val(Math.max(1, parseInt($input.val() || 0) + 1));
+            });
+
+            // Decrement quantity
+            $orderDetails.on('click', '.decrement-btn', function () {
+                const $input = $(this).closest('.input-group').find('.quantity-input');
+                $input.val(Math.max(1, parseInt($input.val() || 0) - 1));
+            });
+
+            // Reindex form fields
+            function reindexOrderDetails() {
+                const $items = $orderDetails.find('.order-detail-item');
+                $items.each(function (newIndex) {
+                    const $item = $(this);
+                    $item.attr('data-index', newIndex);
+                    const $medicalSelect = $item.find('.medical-select');
+                    const $quantityInput = $item.find('.quantity-input');
+
+                    $medicalSelect.attr('name', `OrderRequest.OrderDetail[${newIndex}].MedicalId`);
+                    $quantityInput.attr('name', `OrderRequest.OrderDetail[${newIndex}].Quantity`);
+
+                    console.log(`Reindexed item ${newIndex}: MedicalId=${$medicalSelect.attr('name')}, Quantity=${$quantityInput.attr('name')}`);
+                });
+                $orderDetailsCount.val($items.length);
+            }
+
+            // Update UI state
+            function updateUIState() {
+                const itemCount = $orderDetails.find('.order-detail-item').length;
+                console.log("Updating UI state, item count:", itemCount);
+                const hasItems = itemCount > 0;
+                $submitButton.prop('disabled', !hasItems);
+                $noItemsMessage.toggle(!hasItems);
+                $orderDetailsCount.val(itemCount);
+            }
+
+            // Form submission validation
+            $('#orderForm').on('submit', function (event) {
+                const $form = $(this);
+                if (!$form[0].checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    $form.addClass('was-validated');
+                    return;
+                }
+
+                const $details = $orderDetails.find('.order-detail-item');
+                if ($details.length === 0) {
+                    alert('Vui lòng thêm ít nhất một sản phẩm vào đơn hàng.');
+                    event.preventDefault();
+                    return;
+                }
+
+                let isValid = true;
+                $details.each(function () {
+                    const $item = $(this);
+                    const $select = $item.find('.medical-select');
+                    const $quantity = $item.find('.quantity-input');
+
+                    if (!$select.val()) {
+                        isValid = false;
+                        $select.addClass('is-invalid');
+                    }
+
+                    const quantity = parseInt($quantity.val());
+                    if (!quantity || quantity < 1) {
+                        isValid = false;
+                        $quantity.addClass('is-invalid');
+                    }
+                });
+
+                if (!isValid) {
+                    alert('Vui lòng điền đầy đủ thông tin cho tất cả sản phẩm.');
+                    event.preventDefault();
+                    return;
+                }
+
+                reindexOrderDetails();
+
+                const formData = $form.serializeArray();
+                console.log("Form Data Before Submission:", formData);
+                console.log("Serialized Form Data String:", $form.serialize());
+
+                $form.addClass('was-validated');
+            });
+
+            // Initialize Select2 for a specific element
+            function initializeSelect2($element) {
+                try {
+                    $element.select2({
+                        theme: 'bootstrap4',
+                        placeholder: '-- Chọn Sản Phẩm Y Tế --',
+                        width: '100%',
+                        dropdownParent: $element.closest('.input-group')
+                    });
+                    console.log("Select2 initialized for:", $element.attr('name'));
+                } catch (error) {
+                    console.error("Error initializing Select2:", error);
+                }
+            }
+        });
+    </script>
+}

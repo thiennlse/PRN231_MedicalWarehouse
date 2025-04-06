@@ -1,0 +1,320 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.ShipmentPage.DetailsModel
+
+@{
+    ViewData["Title"] = "Chi Tiết Lô Hàng";
+}
+
+<!-- CSS tùy chỉnh -->
+<style>
+    /* General styling */
+    .page-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding-bottom: 1rem;
+    }
+    
+    /* Card styling */
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        background: linear-gradient(45deg, #0d6efd, #0a58ca);
+        color: white;
+        font-weight: 600;
+        padding: 1.25rem 1.5rem;
+        border: none;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Info item styling */
+    .info-item {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-icon {
+        width: 40px;
+        height: 40px;
+        background-color: rgba(13, 110, 253, 0.1);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 1rem;
+        color: #0d6efd;
+    }
+    
+    .info-content {
+        flex: 1;
+    }
+    
+    .info-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #212529;
+    }
+    
+    /* Table styling */
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table thead th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        border-top: none;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    /* Button styling */
+    .btn-action {
+        border-radius: 0.5rem;
+        font-weight: 500;
+        padding: 0.6rem 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-primary-custom {
+        background: linear-gradient(45deg, #0d6efd, #0a58ca);
+        border: none;
+        color: white;
+    }
+    
+    .btn-primary-custom:hover {
+        background: linear-gradient(45deg, #0a58ca, #0d6efd);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
+    
+    .btn-secondary-custom {
+        background: linear-gradient(45deg, #6c757d, #5a6268);
+        border: none;
+        color: white;
+    }
+    
+    .btn-secondary-custom:hover {
+        background: linear-gradient(45deg, #5a6268, #6c757d);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
+    
+    /* Animation */
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animated {
+        animation: fadeIn 0.5s ease forwards;
+    }
+    
+    .animate-delay-1 {
+        animation-delay: 0.1s;
+    }
+    
+    .animate-delay-2 {
+        animation-delay: 0.2s;
+    }
+    
+    .animate-delay-3 {
+        animation-delay: 0.3s;
+    }
+    
+    /* Badge styles */
+    .badge-product {
+        background-color: #0dcaf0;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+        border-radius: 50rem;
+        font-size: 0.875rem;
+    }
+    
+    .badge-quantity {
+        background-color: #198754;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+        border-radius: 50rem;
+        font-size: 0.875rem;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center animated">
+        <div>
+            <h1 class="display-5 fw-bold text-primary mb-1">
+                <i class="fas fa-boxes me-2"></i>Chi Tiết Lô Hàng
+            </h1>
+            <p class="text-muted">Xem thông tin chi tiết về lô hàng và các sản phẩm</p>
+        </div>
+        <div>
+            <a asp-page="./Index" class="btn btn-outline-secondary btn-action">
+                <i class="fas fa-arrow-left me-2"></i>Quay Lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông Tin Lô Hàng -->
+    <div class="card animated animate-delay-1">
+        <div class="card-header d-flex align-items-center">
+            <i class="fas fa-info-circle me-2"></i>
+            <h3 class="mb-0 fs-4">Thông Tin Lô Hàng</h3>
+        </div>
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Tên Lô Hàng</div>
+                            <div class="info-value">@(string.IsNullOrEmpty(Model.Shipment.Name) ? "Không có tên" : Model.Shipment.Name)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Khu Vực</div>
+                            <div class="info-value">@(Model.AreaNames.ContainsKey(Model.Shipment.AreaId.ToString()) ? Model.AreaNames[Model.Shipment.AreaId.ToString()] : "Không Xác Định")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Nhà Cung Cấp</div>
+                            <div class="info-value">@(Model.SupplierNames.ContainsKey(Model.Shipment.SupplierId.ToString()) ? Model.SupplierNames[Model.Shipment.SupplierId.ToString()] : "Không Xác Định")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <div class="info-label">Ngày Gửi</div>
+                            <div class="info-value">@Model.Shipment.ShipDate.ToString("dd/MM/yyyy")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chi Tiết Lô Hàng -->
+    <div class="card animated animate-delay-2">
+        <div class="card-header d-flex align-items-center">
+            <i class="fas fa-list-alt me-2"></i>
+            <h3 class="mb-0 fs-4">Chi Tiết Sản Phẩm</h3>
+        </div>
+        <div class="card-body">
+            @if (Model.Shipment.ShipmentDetails != null && Model.Shipment.ShipmentDetails.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th>Sản Phẩm Y Tế</th>
+                                <th class="text-center">Số Lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Shipment.ShipmentDetails.Select((detail, index) => new { detail, index }))
+                            {
+                                <tr>
+                                    <td class="text-center">@(item.index + 1)</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3 text-primary">
+                                                <i class="fas fa-prescription-bottle-alt fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">@(Model.MedicalNames.ContainsKey(item.detail.MedicalId.ToString()) ? Model.MedicalNames[item.detail.MedicalId.ToString()] : "Không Xác Định")</div>
+                                                <small class="text-muted">Mã: @item.detail.MedicalId.ToString().Substring(0, 8)...</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success rounded-pill px-3 py-2">
+                                            <i class="fas fa-cubes me-1"></i> @item.detail.Quantity
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h5>Không có chi tiết lô hàng</h5>
+                    <p class="text-muted">Lô hàng này chưa có sản phẩm nào được thêm vào</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Hành Động -->
+    <div class="d-flex justify-content-between mt-4 animated animate-delay-3">
+        <a asp-page="./Edit" asp-route-id="@Model.Shipment.ShipmentId" class="btn btn-primary-custom btn-action">
+            <i class="fas fa-edit me-2"></i> Chỉnh Sửa Lô Hàng
+        </a>
+        <a asp-page="./Index" class="btn btn-secondary-custom btn-action">
+            <i class="fas fa-list me-2"></i> Quay Lại Danh Sách
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+}

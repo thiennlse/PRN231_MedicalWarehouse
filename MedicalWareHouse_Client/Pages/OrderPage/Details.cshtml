@@ -1,0 +1,317 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.OrderPage.DetailsModel
+@using MedicalWarehouse_BusinessObject.Enums
+
+@{
+    ViewData["Title"] = "Chi Tiết Đơn Hàng";
+}
+
+<div class="order-details-container">
+    @if (!ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            <ul>
+                @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (Model.Order == null)
+    {
+        <div class="alert alert-warning">
+            <h4>Không tìm thấy thông tin đơn hàng!</h4>
+            <p>Đơn hàng này có thể đã bị xóa hoặc không tồn tại.</p>
+            <a asp-page="@(Model.IsPharmacy ? "./MyOrders" : "./Index")" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-2"></i> Quay Lại Danh Sách
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="order-card">
+            <div class="order-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="order-title">Chi Tiết Đơn Hàng</h2>
+                    <div class="order-actions">
+                        @if (Model.IsAdminOrStaff)
+                        {
+                            <a asp-page="./Edit" asp-route-id="@Model.Order.OrderId" class="btn btn-primary action-btn">
+                                <i class="fas fa-edit me-2"></i> Sửa
+                            </a>
+                            <a asp-page="./Delete" asp-route-id="@Model.Order.OrderId" class="btn btn-danger action-btn">
+                                <i class="fas fa-trash me-2"></i> Xóa
+                            </a>
+                        }
+                        <a asp-page="@(Model.IsPharmacy ? "./MyOrders" : "./Index")" class="btn btn-outline-secondary action-btn">
+                            <i class="fas fa-arrow-left me-2"></i> Quay Lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="order-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="info-card mb-4">
+                            <div class="info-card-header">
+                                <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h5>
+                            </div>
+                            <div class="info-card-body">
+                                <div class="info-item">
+                                    <span class="info-label">Tên Đơn Hàng:</span>
+                                    <span class="info-value">@Model.Order.Name</span>
+                                </div>
+                                @* <tr>
+                                    <th>Mã Người Dùng:</th>
+                                    <td>@Model.Order.UserId</td>
+                                </tr> *@
+                                <div class="info-item">
+                                    <span class="info-label">Loại Đơn Hàng:</span>
+                                    <span class="info-value">
+                                        <span class="badge bg-info rounded-pill">@Model.Order.Type</span>
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Trạng Thái:</span>
+                                    <span class="info-value">
+                                        <span class="badge rounded-pill bg-@(Model.Order.Status == OrderStatus.ACCEPTED ? "success" :
+                                                        Model.Order.Status == OrderStatus.ORDERED ? "warning" :
+                                                        Model.Order.Status == OrderStatus.PURCHASED ? "danger" : "primary")">
+                                            @(Model.Order.Status == OrderStatus.ACCEPTED ? "Đã Chấp Nhận" :
+                                                Model.Order.Status == OrderStatus.ORDERED ? "Đã Đặt Hàng" :
+                                                Model.Order.Status == OrderStatus.PURCHASED ? "Đã Từ Chối" : "Không Xác Định")
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Ngày Tạo Đơn:</span>
+                                    <span class="info-value">@Model.Order.OrderDate.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-8">
+                        <div class="info-card">
+                            <div class="info-card-header">
+                                <h5><i class="fas fa-pills me-2"></i>Sản Phẩm Trong Đơn Hàng</h5>
+                            </div>
+                            <div class="info-card-body">
+                                @if (Model.Order.OrderDetails != null && Model.Order.OrderDetails.Any())
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Tên Thuốc</th>
+                                                    <th>Số Lượng</th>
+                                                    <th>Đơn Giá</th>
+                                                    <th>Tổng Chi Phí</th>
+                                                    <th>Ngày Hết Hạn</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var item in Model.Order.OrderDetails)
+                                                {
+                                                    var medicalName = Model.GetMedicalName(item.MedicalId);
+                                                    var unitPrice = item.TotalCost / item.OrderQuantity;
+                                                    
+                                                    <tr>
+                                                        <td>
+                                                            <span class="fw-medium">@medicalName</span>
+                                                        </td>
+                                                        <td>@item.OrderQuantity</td>
+                                                        <td>@unitPrice.ToString("N0") VND</td>
+                                                        <td>@item.TotalCost.ToString("N0") VND</td>
+                                                        <td>
+                                                            <span class="@(item.ExpiredDate < DateTime.Now ? "text-danger" : "")">
+                                                                @item.ExpiredDate.ToString("dd/MM/yyyy")
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                            <tfoot class="table-light">
+                                                <tr>
+                                                    <th>Tổng Cộng</th>
+                                                    <th>@Model.Order.OrderDetails.Sum(x => x.OrderQuantity)</th>
+                                                    <th></th>
+                                                    <th>@Model.Order.OrderDetails.Sum(x => x.TotalCost).ToString("N0") VND</th>
+                                                    <th></th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i> Đơn hàng này chưa có sản phẩm nào.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .order-details-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .order-card {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .order-header {
+            padding: 1.75rem 2rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+            color: white;
+        }
+        
+        .order-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+        }
+        
+        .order-body {
+            padding: 2rem;
+        }
+        
+        .action-btn {
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            margin-left: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .info-card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+            overflow: hidden;
+            height: 100%;
+            transition: all 0.3s;
+        }
+        
+        .info-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .info-card-header {
+            padding: 1.25rem 1.5rem;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .info-card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #334155;
+            font-size: 1.1rem;
+        }
+        
+        .info-card-body {
+            padding: 1.5rem;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.9rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #64748b;
+            font-size: 1rem;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #334155;
+            font-size: 1rem;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            font-weight: 600;
+            color: #334155;
+            padding: 1rem;
+        }
+        
+        .table tbody td {
+            vertical-align: middle;
+            padding: 1rem;
+        }
+        
+        .table tfoot th {
+            font-weight: 600;
+            padding: 1rem;
+        }
+        
+        .fw-medium {
+            font-weight: 500;
+        }
+        
+        .badge {
+            padding: 0.5em 1em;
+            font-weight: 500;
+        }
+        
+        @@media (max-width: 768px) {
+            .order-header .d-flex {
+                flex-direction: column;
+                align-items: start !important;
+            }
+            
+            .order-actions {
+                margin-top: 1rem;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .action-btn {
+                margin-left: 0;
+            }
+            
+            .info-item {
+                flex-direction: column;
+            }
+            
+            .info-value {
+                margin-top: 0.25rem;
+            }
+        }
+    </style>
+}

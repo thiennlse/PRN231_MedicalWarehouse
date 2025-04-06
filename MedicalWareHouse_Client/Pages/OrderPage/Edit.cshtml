@@ -1,0 +1,290 @@
+﻿@page "{id:guid}"
+@model MedicalWareHouse_Client.Pages.OrderPage.EditModel
+@using MedicalWarehouse_BusinessObject.Enums
+
+@{
+    ViewData["Title"] = "Chỉnh Sửa Đơn Hàng";
+}
+
+@await Html.PartialAsync("_EnhancedUI")
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="enhanced-card fade-in">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title"><i class="fas fa-edit me-2 text-primary"></i>Chỉnh Sửa Đơn Hàng</h3>
+                        <a asp-page="./Index" class="btn btn-enhanced btn-enhanced-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay Lại
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation enhanced-form" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="section-separator">
+                            <h3><i class="fas fa-info-circle me-2"></i>Chi Tiết Đơn Hàng</h3>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-5">
+                                <div class="enhanced-card mb-4">
+                                    <div class="card-header bg-white">
+                                        <h5 class="card-title mb-0"><i class="fas fa-clipboard-list me-2 text-secondary"></i>Thông Tin Đơn Hàng</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label asp-for="OrderRequest.Type" class="form-label">Loại Đơn Hàng</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light"><i class="fas fa-tags"></i></span>
+                                                <select asp-for="OrderRequest.Type" class="form-select" asp-items="Html.GetEnumSelectList<OrderType>()">
+                                                    <option value="">-- Chọn Loại Đơn Hàng --</option>
+                                                </select>
+                                            </div>
+                                            <span asp-validation-for="OrderRequest.Type" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label asp-for="OrderRequest.Status" class="form-label">Trạng Thái</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light"><i class="fas fa-chart-bar"></i></span>
+                                                <select asp-for="OrderRequest.Status" class="form-select" asp-items="Html.GetEnumSelectList<OrderStatus>()">
+                                                    <option value="">-- Chọn Trạng Thái --</option>
+                                                </select>
+                                            </div>
+                                            <span asp-validation-for="OrderRequest.Status" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-7">
+                                <div class="enhanced-card mb-4">
+                                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0"><i class="fas fa-list-alt me-2 text-secondary"></i>Chi Tiết Đơn Hàng</h5>
+                                        <button type="button" class="btn btn-enhanced btn-enhanced-primary" onclick="addOrderDetail()">
+                                            <i class="fas fa-plus"></i> Thêm Sản Phẩm
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="orderDetails">
+                                            @for (var i = 0; i < Model.OrderRequest.OrderDetail.Count; i++)
+                                            {
+                                                <div class="order-detail-item mb-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                                        <h6 class="mb-0 fw-bold"><i class="fas fa-box me-2 text-secondary"></i>Sản Phẩm #@(i + 1)</h6>
+                                                        <button type="button" class="btn btn-enhanced btn-enhanced-danger btn-sm" onclick="removeOrderDetail(this)">
+                                                            <i class="fas fa-trash"></i> Xóa
+                                                        </button>
+                                                    </div>
+                                                    <input type="hidden" asp-for="OrderRequest.OrderDetail[i].MedicalId" id="OrderRequest_OrderDetail_@(i)_MedicalId" />
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Sản Phẩm Y Tế</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light"><i class="fas fa-pills"></i></span>
+                                                            <select class="form-select" asp-items="Model.MedicalItems"
+                                                                    asp-for="OrderRequest.OrderDetail[i].MedicalId"
+                                                                    onchange="updateMedicalId(this, @i)">
+                                                                <option value="">-- Chọn Sản Phẩm Y Tế --</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <label class="form-label">Số Lượng</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light"><i class="fas fa-hashtag"></i></span>
+                                                            <input type="number" class="form-control" asp-for="OrderRequest.OrderDetail[i].Quantity" min="1" />
+                                                            <button type="button" class="btn btn-outline-secondary increment-btn" onclick="incrementQuantity(@i)">
+                                                                <i class="fas fa-plus"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-secondary decrement-btn" onclick="decrementQuantity(@i)">
+                                                                <i class="fas fa-minus"></i>
+                                                            </button>
+                                                        </div>
+                                                        <span asp-validation-for="OrderRequest.OrderDetail[i].Quantity" class="text-danger"></span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                        @if (!Model.OrderRequest.OrderDetail.Any())
+                                        {
+                                            <div id="noItemsMessage" class="text-center text-muted py-5">
+                                                <div class="mb-3">
+                                                    <i class="fas fa-box fa-4x text-secondary opacity-50"></i>
+                                                </div>
+                                                <h5>Chưa có sản phẩm nào</h5>
+                                                <p class="text-muted">Thêm sản phẩm để hoàn tất đơn hàng.</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-page="./Index" class="btn btn-enhanced btn-enhanced-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay Lại
+                            </a>
+                            <button type="submit" class="btn btn-enhanced btn-enhanced-success">
+                                <i class="fas fa-save"></i> Lưu Thay Đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Kích hoạt xác thực biểu mẫu Bootstrap
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+
+        let index = @Model.OrderRequest.OrderDetail.Count;
+
+        function addOrderDetail() {
+            const template = `
+                <div class="order-detail-item mb-3 fade-in">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-box me-2 text-secondary"></i>Sản Phẩm #${index + 1}</h6>
+                        <button type="button" class="btn btn-enhanced btn-enhanced-danger btn-sm" onclick="removeOrderDetail(this)">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
+                    <input type="hidden" name="OrderRequest.OrderDetail[${index}].MedicalId" id="OrderRequest_OrderDetail_${index}_MedicalId" />
+                    <div class="mb-3">
+                        <label class="form-label">Sản Phẩm Y Tế</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-pills"></i></span>
+                            <select class="form-select" name="OrderRequest.OrderDetail[${index}].MedicalId"
+                                    id="select_OrderRequest_OrderDetail_${index}_MedicalId"
+                                    onchange="updateMedicalId(this, ${index})">
+                                <option value="">-- Chọn Sản Phẩm Y Tế --</option>
+                                ${getMedicalItemsOptions()}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Số Lượng</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-hashtag"></i></span>
+                            <input type="number" class="form-control" name="OrderRequest.OrderDetail[${index}].Quantity" min="1" value="1" />
+                            <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity(${index})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity(${index})">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const container = document.getElementById('orderDetails');
+            // Remove no items message if it exists
+            const noItemsMessage = document.getElementById('noItemsMessage');
+            if (noItemsMessage) {
+                noItemsMessage.remove();
+            }
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = template.trim();
+            container.appendChild(tempDiv.firstChild);
+            
+            index++;
+        }
+
+        function removeOrderDetail(button) {
+            const item = button.closest('.order-detail-item');
+            item.classList.add('fade-out');
+            setTimeout(() => {
+                item.remove();
+                reindexOrderDetails();
+                if (document.querySelectorAll('.order-detail-item').length === 0) {
+                    const container = document.getElementById('orderDetails');
+                    container.innerHTML = `
+                        <div id="noItemsMessage" class="text-center text-muted py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-box fa-4x text-secondary opacity-50"></i>
+                            </div>
+                            <h5>Chưa có sản phẩm nào</h5>
+                            <p class="text-muted">Thêm sản phẩm để hoàn tất đơn hàng.</p>
+                        </div>`;
+                }
+            }, 300);
+        }
+
+        function incrementQuantity(idx) {
+            const input = document.querySelector(`input[name="OrderRequest.OrderDetail[${idx}].Quantity"]`);
+            input.value = Math.max(1, parseInt(input.value || 0) + 1);
+        }
+
+        function decrementQuantity(idx) {
+            const input = document.querySelector(`input[name="OrderRequest.OrderDetail[${idx}].Quantity"]`);
+            input.value = Math.max(1, parseInt(input.value || 0) - 1);
+        }
+
+        function reindexOrderDetails() {
+            const container = document.getElementById('orderDetails');
+            const items = container.getElementsByClassName('order-detail-item');
+
+            Array.from(items).forEach((item, index) => {
+                const title = item.querySelector('h6');
+                title.innerHTML = `<i class="fas fa-box me-2 text-secondary"></i>Sản Phẩm #${index + 1}`;
+
+                const medicalIdInput = item.querySelector('input[type="hidden"]');
+                const quantityInput = item.querySelector('input[type="number"]');
+                const select = item.querySelector('select');
+
+                medicalIdInput.name = `OrderRequest.OrderDetail[${index}].MedicalId`;
+                medicalIdInput.id = `OrderRequest_OrderDetail_${index}_MedicalId`;
+                quantityInput.name = `OrderRequest.OrderDetail[${index}].Quantity`;
+                select.name = `OrderRequest.OrderDetail[${index}].MedicalId`;
+                select.id = `select_OrderRequest_OrderDetail_${index}_MedicalId`;
+                select.setAttribute('onchange', `updateMedicalId(this, ${index})`);
+                
+                // Update increment/decrement buttons
+                const incrementBtn = item.querySelector('.increment-btn');
+                const decrementBtn = item.querySelector('.decrement-btn');
+                if (incrementBtn) incrementBtn.setAttribute('onclick', `incrementQuantity(${index})`);
+                if (decrementBtn) decrementBtn.setAttribute('onclick', `decrementQuantity(${index})`);
+            });
+        }
+
+        function updateMedicalId(select, index) {
+            const medicalIdInput = document.getElementById(`OrderRequest_OrderDetail_${index}_MedicalId`);
+            medicalIdInput.value = select.value;
+        }
+
+        function getMedicalItemsOptions() {
+            return `@Html.Raw(string.Join("", Model.MedicalItems.Select(m => $"<option value='{m.Value}'>{m.Text}</option>")))`;
+        }
+    </script>
+
+    <style>
+        .fade-out {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+    </style>
+}

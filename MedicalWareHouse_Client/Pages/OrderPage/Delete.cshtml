@@ -1,0 +1,82 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.OrderPage.DeleteModel
+
+@{
+    ViewData["Title"] = "Xóa Đơn Hàng";
+}
+
+<h1>Xóa</h1>
+
+<h3>Bạn có chắc chắn muốn xóa đơn hàng này không?</h3>
+<div>
+    <h4>Đơn Hàng</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            Người Dùng
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.User.Id)
+        </dd>
+        <dt class="col-sm-2">
+            Loại Đơn Hàng
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.Type)
+        </dd>
+        <dt class="col-sm-2">
+            Ngày Tạo Đơn
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.OrderDate)
+        </dd>
+        <dt class="col-sm-2">
+            Trạng Thái
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.Status)
+        </dd>
+        <dt class="col-sm-2">
+            Tên Đơn Hàng
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.Name)
+        </dd>
+        <dt class="col-sm-2">
+            Ngày Tạo
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.CreatedDate)
+        </dd>
+        <dt class="col-sm-2">
+            Ngày Cập Nhật
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.UpdatedDate)
+        </dd>
+        <dt class="col-sm-2">
+            Người Tạo
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.CreateBy)
+        </dd>
+        <dt class="col-sm-2">
+            Người Cập Nhật
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Order.UpdateBy)
+        </dd>
+        <dt class="col-sm-2">
+            Đã Xóa
+        </dt>
+        <dd class="col-sm-10">
+            @(Model.Order.IsDeleted ?? false ? "Có" : "Không")
+        </dd>
+    </dl>
+
+    <form method="post">
+        <input type="hidden" asp-for="Order.Id" />
+        <input type="submit" value="Xóa" class="btn btn-danger" /> |
+        <a asp-page="./Index">Quay Lại Danh Sách</a>
+    </form>
+</div>

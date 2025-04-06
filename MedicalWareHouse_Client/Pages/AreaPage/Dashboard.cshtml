@@ -1,0 +1,676 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.AreaPage.DashboardModel
+@using MedicalWarehouse_BusinessObject.Enums
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_Layout";
+}
+
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+    
+    .stats-card {
+        transition: transform 0.2s;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+    
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #f8f9fa;
+    }
+    
+    /* Recent Orders Enhancements */
+    .order-row {
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+    }
+    
+    .order-row:hover {
+        background-color: rgba(13, 110, 253, 0.03);
+        border-left: 3px solid #0d6efd;
+    }
+    
+    .order-code {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+    }
+    
+    .bg-success.bg-opacity-10 {
+        background-color: rgba(25, 135, 84, 0.1) !important;
+    }
+    
+    .bg-warning.bg-opacity-10 {
+        background-color: rgba(255, 193, 7, 0.1) !important;
+    }
+    
+    .bg-danger.bg-opacity-10 {
+        background-color: rgba(220, 53, 69, 0.1) !important;
+    }
+    
+    .bg-primary.bg-opacity-10 {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+    
+    .rounded-pill {
+        border-radius: 50rem !important;
+    }
+    
+    .btn-sm.rounded-pill {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+</style>
+
+<div class="container-fluid px-4">
+    <!-- Date Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="text-primary fw-bold">Dashboard Overview</h2>
+                <form method="get" class="d-flex align-items-center">
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white border-0">
+                            <i class="fas fa-calendar"></i>
+                        </span>
+                        <input type="date" asp-for="date" class="form-control border-start-0" onchange="this.form.submit()" style="max-width: 200px;">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 stats-card h-100 bg-primary bg-gradient text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-2 opacity-75">Tổng Xuất</h6>
+                            <h3 class="mb-0 fw-bold">@Model.CircelChart[0]</h3>
+                        </div>
+                        <div class="stats-icon rounded-circle bg-white bg-opacity-25">
+                            <i class="fas fa-download fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 stats-card h-100 bg-success bg-gradient text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-2 opacity-75">Tổng Nhập</h6>
+                            <h3 class="mb-0 fw-bold">@Model.CircelChart[1]</h3>
+                        </div>
+                        <div class="stats-icon rounded-circle bg-white bg-opacity-25">
+                            <i class="fas fa-upload fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 stats-card h-100 bg-info bg-gradient text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-2 opacity-75">Tổng Số Giao Dịch</h6>
+                            <h3 class="mb-0 fw-bold">@(Model.CircelChart[0] + Model.CircelChart[1])</h3>
+                        </div>
+                        <div class="stats-icon rounded-circle bg-white bg-opacity-25">
+                            <i class="fas fa-exchange-alt fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 stats-card h-100 bg-warning bg-gradient text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-2 opacity-75">Tốc độ tăng trưởng</h6>
+                            <h3 class="mb-0 fw-bold">@Model.Increase%</h3>
+                        </div>
+                        <div class="stats-icon rounded-circle bg-white bg-opacity-25">
+                            <i class="fas fa-chart-line fa-2x text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Weekly Import & Export -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0">Nhập và xuất khẩu hàng tuần</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="profitExpensesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribution -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0">Phân phối nhập khẩu và xuất khẩu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <h4 class="mb-1">@(Model.CircelChart[0] + Model.CircelChart[1])</h4>
+                        <p class="text-success mb-0">
+                            <i class="fas fa-arrow-up me-1"></i>@Model.Increase% from last year
+                        </p>
+                    </div>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="trafficDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Monthly Sales -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0">Tổng quan bán hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">@((Model.ExportSale.Sum() + Model.ImportSale.Sum()).ToString("N2"))</h4>
+                        <p class="text-success mb-0">
+                            <i class="fas fa-arrow-up me-1"></i>@Model.PIncrease% from last year
+                        </p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="productSalesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Orders List -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 h-100 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <span class="bg-primary bg-gradient text-white p-2 rounded-circle me-3">
+                                <i class="fas fa-file-invoice"></i>
+                            </span>
+                            <h5 class="card-title mb-0">Đơn Hàng Nhập Gần Đây</h5>
+                        </div>
+                        <!--<a href="/OrderPage/Index" class="btn btn-sm btn-outline-primary rounded-pill">
+                            <i class="fas fa-external-link-alt me-1"></i> Xem tất cả
+                        </a>-->
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.ImportOrders != null && Model.ImportOrders.Any())
+                    {
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr class="bg-light">
+                                        <th class="border-0 py-3 ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user text-primary me-2"></i>
+                                                <span>Người Tạo</span>
+                                            </div>
+                                        </th>
+                                        <th class="border-0 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-hashtag text-primary me-2"></i>
+                                                <span>Mã Đơn</span>
+                                            </div>
+                                        </th>
+                                        <th class="border-0 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                                <span>Ngày Đặt</span>
+                                            </div>
+                                        </th>
+                                        <th class="border-0 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-tasks text-primary me-2"></i>
+                                                <span>Trạng Thái</span>
+                                            </div>
+                                        </th>
+                                        <th class="border-0 py-3 text-center">Chức Năng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.ImportOrders)
+                                    {
+                                        <tr class="order-row">
+                                            <td class="py-3 ps-4 align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-light rounded-circle p-2 me-2">
+                                                        <i class="fas fa-user-circle text-secondary"></i>
+                                                    </div>
+                                                    <span>@(order.User?.UserName ?? "Không xác định")</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 align-middle">
+                                                <a href="/OrderPage/Details?id=@order.Id" class="text-primary fw-bold text-decoration-none">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="order-code">@order.Name</span>
+                                                        <i class="fas fa-external-link-alt ms-2 small text-muted"></i>
+                                                    </div>
+                                                </a>
+                                            </td>
+                                            <td class="py-3 align-middle">
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-light text-dark border border-secondary border-opacity-25 px-3 py-2">
+                                                        <i class="far fa-calendar-alt me-1 text-secondary"></i>
+                                                        @order.OrderDate.ToString("dd/MM/yyyy")
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 align-middle">
+                                                @{
+                                                    var statusClass = order.Status == OrderStatus.ACCEPTED ? "success" :
+                                                                      order.Status == OrderStatus.ORDERED ? "warning" :
+                                                                      order.Status == OrderStatus.PURCHASED ? "danger" : "primary";
+                                                    
+                                                    var statusIcon = order.Status == OrderStatus.ACCEPTED ? "check-circle" :
+                                                                     order.Status == OrderStatus.ORDERED ? "clock" :
+                                                                     order.Status == OrderStatus.PURCHASED ? "times-circle" : "info-circle";
+                                                    
+                                                    var statusText = order.Status == OrderStatus.ACCEPTED ? "Đã Chấp Nhận" :
+                                                                     order.Status == OrderStatus.ORDERED ? "Đã Đặt Hàng" :
+                                                                     order.Status == OrderStatus.PURCHASED ? "Đã Từ Chối" : "Không Xác Định";
+                                                }
+                                                <span class="badge bg-@statusClass bg-opacity-10 text-@statusClass px-3 py-2 rounded-pill">
+                                                    <i class="fas fa-@statusIcon me-1"></i>
+                                                    @statusText
+                                                </span>
+                                            </td>
+                                            <td class="py-3 align-middle text-center">
+                                                <div class="btn-group" role="group">
+                                                    @if (order.Status != OrderStatus.ACCEPTED && Model.IsStaff)
+                                                    {
+                                                        <a asp-page="/ShipmentPage/Create"
+                                                           asp-route-orderId="@order.Id"
+                                                           class="btn btn-sm btn-success rounded-pill me-1 shadow-sm">
+                                                            <i class="fas fa-check me-1"></i> Chấp Nhận
+                                                        </a>
+                                                    }
+                                                    <a asp-page="/OrderPage/Details" asp-route-id="@order.Id" 
+                                                       class="btn btn-sm btn-outline-primary rounded-pill shadow-sm">
+                                                        <i class="fas fa-eye me-1"></i> Chi Tiết
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="mb-4">
+                                <span class="bg-light p-4 rounded-circle d-inline-block">
+                                    <i class="fas fa-inbox fa-3x text-muted"></i>
+                                </span>
+                            </div>
+                            <h5 class="text-muted mb-2">Không có đơn hàng nhập nào</h5>
+                            <p class="text-muted mb-3">Các đơn hàng nhập gần đây sẽ xuất hiện ở đây</p>
+                            <a href="/OrderPage/Create" class="btn btn-primary rounded-pill">
+                                <i class="fas fa-plus-circle me-1"></i> Tạo đơn hàng mới
+                            </a>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer bg-white text-center border-0 py-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i> 
+                        Hiển thị @(Model.ImportOrders?.Count() ?? 0) đơn hàng nhập gần đây nhất
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Đợi DOM load xong
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set Chart.js defaults
+            Chart.defaults.font.family = "'Inter', 'Helvetica', 'Arial', sans-serif";
+            Chart.defaults.font.size = 13;
+            Chart.defaults.plugins.legend.position = 'bottom';
+            
+            // Recent Orders Enhancements
+            const orderRows = document.querySelectorAll('.order-row');
+            
+            // Add click event to make entire row clickable for details
+            orderRows.forEach(row => {
+                const detailsLink = row.querySelector('a[asp-page="/OrderPage/Details"]');
+                if (detailsLink) {
+                    row.style.cursor = 'pointer';
+                    
+                    row.addEventListener('click', function(e) {
+                        // Don't trigger if clicking on buttons or links
+                        if (e.target.tagName === 'BUTTON' || 
+                            e.target.tagName === 'A' || 
+                            e.target.closest('button') || 
+                            e.target.closest('a')) {
+                            return;
+                        }
+                        
+                        window.location.href = detailsLink.getAttribute('href');
+                    });
+                }
+            });
+            
+            // Add hover effects for buttons
+            const actionButtons = document.querySelectorAll('.order-row .btn');
+            actionButtons.forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    if (this.classList.contains('btn-outline-primary')) {
+                        this.classList.remove('btn-outline-primary');
+                        this.classList.add('btn-primary');
+                    }
+                });
+                
+                btn.addEventListener('mouseleave', function() {
+                    if (this.classList.contains('btn-primary') && 
+                        !this.classList.contains('btn-success')) {
+                        this.classList.remove('btn-primary');
+                        this.classList.add('btn-outline-primary');
+                    }
+                });
+            });
+            
+            // Weekly Import & Export Chart
+            var profitExpensesChart = new Chart(
+                document.getElementById('profitExpensesChart'),
+                {
+                    type: 'bar',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Import',
+                            backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            data: @Html.Raw(Json.Serialize(Model.Icolums)),
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.7
+                        }, {
+                            label: 'Export',
+                            backgroundColor: 'rgba(25, 135, 84, 0.2)',
+                            borderColor: 'rgba(25, 135, 84, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            data: @Html.Raw(Json.Serialize(Model.Ecolums)),
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    drawBorder: false,
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#000',
+                                bodyColor: '#000',
+                                bodyFont: {
+                                    size: 12
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: true,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            );
+
+            // Distribution Chart
+            var trafficDistributionChart = new Chart(
+                document.getElementById('trafficDistributionChart'),
+                {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Import', 'Export'],
+                        datasets: [{
+                            data: @Html.Raw(Json.Serialize(Model.CircelChart)),
+                            backgroundColor: [
+                                'rgba(13, 110, 253, 0.8)',
+                                'rgba(25, 135, 84, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(13, 110, 253, 1)',
+                                'rgba(25, 135, 84, 1)'
+                            ],
+                            borderWidth: 2,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        radius: '90%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#000',
+                                bodyColor: '#000',
+                                bodyFont: {
+                                    size: 12
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                displayColors: true,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            );
+
+            // Monthly Sales Chart
+            var productSalesChart = new Chart(
+                document.getElementById('productSalesChart'),
+                {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Export',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            borderColor: 'rgba(25, 135, 84, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(25, 135, 84, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.4,
+                            data: @Html.Raw(Json.Serialize(Model.ExportSale))
+                        },
+                        {
+                            label: 'Import',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(13, 110, 253, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.4,
+                            data: @Html.Raw(Json.Serialize(Model.ImportSale))
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    drawBorder: false,
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return  value.toLocaleString();
+                                    },
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 20,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#000',
+                                bodyColor: '#000',
+                                bodyFont: {
+                                    size: 12
+                                },
+                                borderColor: 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
+                                padding: 10,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + context.parsed.y.toLocaleString();
+                                    }
+                                },
+                                displayColors: true,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            );
+        });
+    </script>
+}

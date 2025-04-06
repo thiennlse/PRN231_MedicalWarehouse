@@ -1,0 +1,739 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.MedicalPage.IndexModel
+
+@{
+    ViewData["Title"] = "Danh Sách Y Tế";
+}
+
+<div class="medical-products-container">
+    <div class="header-section mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="main-title">Danh Sách Thuốc</h1>
+                <p class="text-muted">Tìm kiếm và đặt hàng các loại thuốc chất lượng cao</p>
+            </div>
+            <div class="d-flex gap-3">
+                @if (Model.IsPharmacy)
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-primary btn-lg position-relative cart-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-cart me-2"></i> Giỏ Hàng
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count">
+                                0
+                            </span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3 cart-dropdown" style="min-width: 360px; max-height: 500px; overflow-y: auto;">
+                            <h6 class="dropdown-header">Giỏ hàng của bạn</h6>
+                            <div class="cart-items">
+                                <!-- Cart items will be loaded here -->
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3 p-2 bg-light rounded">
+                                <strong>Tổng tiền:</strong>
+                                <span class="cart-total fw-bold">0 VNĐ</span>
+                            </div>
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="/Cart" class="btn btn-primary">
+                                    <i class="fas fa-shopping-cart me-2"></i> Xem Giỏ Hàng
+                                </a>
+                                <button class="btn btn-outline-danger clear-cart-btn" type="button">
+                                    <i class="fas fa-trash me-2"></i> Xóa Giỏ Hàng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (Model.CanCreateMedical)
+                {
+                    <a asp-page="Create" class="btn btn-success btn-lg create-button">
+                        <i class="fas fa-plus me-2"></i> Tạo Mới
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="filters-section mb-4 p-3 bg-light rounded shadow-sm">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control search-input" placeholder="Tìm kiếm tên thuốc...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="typeFilter">
+                    <option value="">Tất cả các loại</option>
+                    <!-- Types can be added dynamically -->
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4 products-grid">
+        @foreach (var item in Model.Medical)
+        {
+            <div class="col">
+                <div class="product-card h-100">
+                    <div class="product-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="product-title">@item.Name</h5>
+                            <div class="action-buttons">
+                                <a asp-page="./Details" asp-route-id="@item.Id" class="btn btn-icon" title="Chi tiết">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                @if (Model.CanEditMedical)
+                                {
+                                    <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-icon" title="Chỉnh sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                }
+                                @if (Model.CanDeleteMedical)
+                                {
+                                    <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-icon text-danger" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-image">
+                        @if (item.Image != null && item.Image.Any())
+                        {
+                            <div id="carousel-@item.Id" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    @for (int i = 0; i < item.Image.Count; i++)
+                                    {
+                                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                                            <img src="@item.Image[i]" class="d-block w-100" alt="@item.Name">
+                                        </div>
+                                    }
+                                </div>
+                                @if (item.Image.Count > 1)
+                                {
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-@item.Id"
+                                        data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-@item.Id"
+                                        data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="no-image">
+                                <i class="fas fa-image"></i>
+                                <p>No image available</p>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="product-body">
+                        <div class="product-badge badge bg-info text-white">@item.TypeMedical</div>
+                        <div class="product-unit"><i class="fas fa-box me-1"></i> Đơn vị: @item.Unit</div>
+                        <p class="product-description">@item.Description</p>
+                        <div class="product-stats">
+                            <div class="product-price">
+                                <i class="fas fa-tag me-1"></i> @item.Price.ToString("N0") VNĐ
+                            </div>
+                            <div class="product-stock @(item.Quantity > 10 ? "text-success" : "text-danger")">
+                                <i class="fas fa-cubes me-1"></i> Còn @item.Quantity
+                            </div>
+                        </div>
+                        @if (Model.IsPharmacy && item.Quantity > 0)
+                        {
+                            <div class="d-grid gap-2 mt-3">
+                                <div class="input-group add-to-cart-group">
+                                    <input type="number" class="form-control quantity-input" 
+                                           value="1" min="1" max="@item.Quantity" 
+                                           data-medical-id="@item.Id">
+                                    <button class="btn btn-success add-to-cart" 
+                                            data-medical-id="@item.Id"
+                                            data-medical-name="@item.Name"
+                                            data-medical-price="@item.Price"
+                                            data-medical-image="@(item.Image?.FirstOrDefault() ?? "")"
+                                            data-medical-unit="@item.Unit"
+                                            data-medical-max="@item.Quantity">
+                                        <i class="fas fa-cart-plus me-1"></i> Thêm
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else if (Model.IsPharmacy && item.Quantity <= 0)
+                        {
+                            <div class="out-of-stock-alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i> Hết hàng
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* Main container styling */
+        .medical-products-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Header styling */
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .create-button {
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .cart-button {
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .cart-dropdown {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        /* Filter section */
+        .filters-section {
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-input {
+            border-left: none;
+            padding-left: 0;
+        }
+
+        /* Product Card Styling */
+        .product-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            background-color: white;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .product-header {
+            padding: 1.25rem 1.25rem 0.75rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .product-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: #334155;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-icon {
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            margin-left: 0.3rem;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background-color: #e9ecef;
+            color: #343a40;
+        }
+
+        .product-image {
+            height: 250px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-image img {
+            height: 250px;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        .carousel-control-prev,
+        .carousel-control-next {
+            background-color: rgba(0,0,0,0.4);
+            width: 35px;
+            height: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .product-card:hover .carousel-control-prev,
+        .product-card:hover .carousel-control-next {
+            opacity: 1;
+        }
+
+        .no-image {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            color: #adb5bd;
+        }
+
+        .no-image i {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .no-image p {
+            margin: 0;
+            font-size: 0.875rem;
+        }
+
+        .product-body {
+            padding: 1.5rem;
+        }
+
+        .product-badge {
+            display: inline-block;
+            margin-bottom: 0.75rem;
+            padding: 0.5em 0.75em;
+            font-size: 0.8em;
+            font-weight: 500;
+            border-radius: 50px;
+        }
+
+        .product-unit {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .product-description {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 3rem;
+        }
+
+        .product-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .product-price {
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .product-stock {
+            font-weight: 500;
+        }
+
+        .add-to-cart-group {
+            margin-top: 1.25rem;
+        }
+
+        .quantity-input {
+            text-align: center;
+            border-top-left-radius: 50px;
+            border-bottom-left-radius: 50px;
+            height: 45px;
+            font-size: 1.1rem;
+        }
+
+        .add-to-cart {
+            border-top-right-radius: 50px;
+            border-bottom-right-radius: 50px;
+            height: 45px;
+            font-size: 1.1rem;
+        }
+
+        .out-of-stock-alert {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+        }
+
+        /* Cart item styling */
+        .cart-item {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 0.75rem 0;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-image {
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Responsive adjustments */
+        @@media (max-width: 768px) {
+            .row-cols-md-3 {
+                --bs-gutter-x: 1rem;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .product-card {
+                margin-bottom: 1rem;
+            }
+            
+            .product-image, .product-image img {
+                height: 200px;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        class CartManager {
+            constructor() {
+                this.cartItems = new Map();
+                this.loadFromLocalStorage();
+                this.setupEventListeners();
+                this.syncWithServer();
+            }
+
+            loadFromLocalStorage() {
+                const savedCart = localStorage.getItem('cart');
+                if (savedCart) {
+                    const cartData = JSON.parse(savedCart);
+                    this.cartItems = new Map(cartData);
+                }
+                this.updateCartUI();
+            }
+
+            saveToLocalStorage() {
+                localStorage.setItem('cart', JSON.stringify(Array.from(this.cartItems.entries())));
+                this.updateCartUI();
+            }
+
+            async syncWithServer() {
+                try {
+                    const response = await fetch('/api/cart', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.result) {
+                            // Merge server cart with local cart
+                            result.result.items.forEach(item => {
+                                if (!this.cartItems.has(item.medicalId)) {
+                                    this.cartItems.set(item.medicalId, {
+                                        name: item.medicalName,
+                                        price: item.price,
+                                        quantity: item.quantity,
+                                        image: item.image
+                                    });
+                                }
+                            });
+                            this.saveToLocalStorage();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error syncing with server:', error);
+                }
+            }
+
+            setupEventListeners() {
+                document.addEventListener('click', async (e) => {
+                    if (e.target.closest('.add-to-cart')) {
+                        const button = e.target.closest('.add-to-cart');
+                        const medicalId = button.dataset.medicalId;
+                        const quantityInput = button.closest('.input-group').querySelector('.quantity-input');
+                        const quantity = parseInt(quantityInput.value);
+                        const maxQuantity = parseInt(button.dataset.medicalMax);
+
+                        if (quantity < 1 || quantity > maxQuantity) {
+                            this.showToast('Số lượng không hợp lệ', 'error');
+                            return;
+                        }
+
+                        await this.addToCart({
+                            id: medicalId,
+                            name: button.dataset.medicalName,
+                            price: parseFloat(button.dataset.medicalPrice),
+                            quantity: quantity,
+                            image: button.dataset.medicalImage,
+                            unit: button.dataset.medicalUnit
+                        });
+
+                        quantityInput.value = 1;
+                    }
+
+                    if (e.target.closest('.clear-cart-btn')) {
+                        if (confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) {
+                            await this.clearCart();
+                        }
+                    }
+                });
+                
+                // Search functionality
+                const searchInput = document.querySelector('.search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', this.filterProducts);
+                }
+                
+                // Type filter functionality
+                const typeFilter = document.getElementById('typeFilter');
+                if (typeFilter) {
+                    typeFilter.addEventListener('change', this.filterProducts);
+                    
+                    // Populate the type filter dropdown
+                    this.populateTypeFilter();
+                }
+            }
+            
+            // Populate type filter with unique medical types
+            populateTypeFilter() {
+                const typeFilter = document.getElementById('typeFilter');
+                if (!typeFilter) return;
+                
+                const types = new Set();
+                document.querySelectorAll('.product-badge').forEach(badge => {
+                    types.add(badge.textContent.trim());
+                });
+                
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    typeFilter.appendChild(option);
+                });
+            }
+            
+            // Filter products based on search input and type filter
+            filterProducts() {
+                const searchValue = document.querySelector('.search-input')?.value.toLowerCase() || '';
+                const typeValue = document.getElementById('typeFilter')?.value || '';
+                
+                document.querySelectorAll('.col').forEach(col => {
+                    const card = col.querySelector('.product-card');
+                    const title = card.querySelector('.product-title').textContent.toLowerCase();
+                    const type = card.querySelector('.product-badge').textContent.trim();
+                    
+                    const matchesSearch = searchValue === '' || title.includes(searchValue);
+                    const matchesType = typeValue === '' || type === typeValue;
+                    
+                    col.style.display = matchesSearch && matchesType ? '' : 'none';
+                });
+            }
+
+            async addToCart(item) {
+                try {
+                    // Add to local storage
+                    const existingItem = this.cartItems.get(item.id);
+                    if (existingItem) {
+                        existingItem.quantity += item.quantity;
+                    } else {
+                        this.cartItems.set(item.id, {
+                            name: item.name,
+                            price: item.price,
+                            quantity: item.quantity,
+                            image: item.image,
+                            unit: item.unit
+                        });
+                    }
+                    this.saveToLocalStorage();
+
+                    // Sync with server
+                    const response = await fetch('/api/cart/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({
+                            medicalId: item.id,
+                            quantity: item.quantity
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.showToast('Thêm vào giỏ hàng thành công!', 'success');
+                        } else {
+                            this.showToast(result.message, 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showToast('Có lỗi xảy ra khi thêm vào giỏ hàng', 'error');
+                }
+            }
+
+            async clearCart() {
+                try {
+                    // Clear local storage
+                    this.cartItems.clear();
+                    this.saveToLocalStorage();
+
+                    // Clear server cart
+                    const response = await fetch('/api/cart/clear', {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.showToast('Đã xóa giỏ hàng', 'success');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showToast('Có lỗi xảy ra khi xóa giỏ hàng', 'error');
+                }
+            }
+
+            updateCartUI() {
+                const cartCount = document.querySelector('.cart-count');
+                const cartItems = document.querySelector('.cart-items');
+                const cartTotal = document.querySelector('.cart-total');
+
+                let totalQuantity = 0;
+                let totalAmount = 0;
+
+                const itemsHtml = Array.from(this.cartItems.entries()).map(([id, item]) => {
+                    totalQuantity += item.quantity;
+                    totalAmount += item.price * item.quantity;
+                    return `
+                        <div class="cart-item d-flex align-items-center gap-2">
+                            <img src="${item.image || '/images/no-image.png'}" alt="${item.name}" class="cart-item-image" style="width: 50px; height: 50px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 product-title">${item.name}</h6>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">${item.quantity} ${item.unit || ''}</small>
+                                    <small class="fw-bold">${this.formatCurrency(item.price)}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                if (cartCount) cartCount.textContent = totalQuantity;
+                if (cartItems) cartItems.innerHTML = itemsHtml || '<p class="text-center py-3 text-muted">Giỏ hàng trống</p>';
+                if (cartTotal) cartTotal.textContent = this.formatCurrency(totalAmount);
+            }
+
+            formatCurrency(amount) {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+            }
+
+            showToast(message, type = 'info') {
+                // Create toast container if it doesn't exist
+                let toastContainer = document.querySelector('.toast-container');
+                if (!toastContainer) {
+                    toastContainer = document.createElement('div');
+                    toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                    document.body.appendChild(toastContainer);
+                }
+                
+                // Create toast
+                const toastId = `toast-${Date.now()}`;
+                const bgClass = type === 'success' ? 'bg-success' : 
+                                type === 'error' ? 'bg-danger' : 'bg-info';
+                
+                const toastHtml = `
+                    <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header ${bgClass} text-white">
+                            <strong class="me-auto">Thông báo</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+                
+                toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+                
+                // Initialize and show the toast
+                const toastElement = document.getElementById(toastId);
+                const toast = new bootstrap.Toast(toastElement, {
+                    delay: 3000
+                });
+                toast.show();
+                
+                // Remove after hiding
+                toastElement.addEventListener('hidden.bs.toast', () => {
+                    toastElement.remove();
+                });
+            }
+        }
+
+        // Initialize cart manager when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            window.cartManager = new CartManager();
+        });
+    </script>
+}

@@ -1,0 +1,6 @@
+services:
+  medicalwarehouse_api:
+    image: ${DOCKER_REGISTRY-}medicalwarehouseapi
+    build:
+      context: .
+      dockerfile: MedicalWarehouse_API/Dockerfile

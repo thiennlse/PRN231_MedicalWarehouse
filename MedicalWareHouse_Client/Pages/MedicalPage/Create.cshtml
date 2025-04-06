@@ -1,0 +1,204 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.MedicalPage.CreateModel
+
+@{
+    ViewData["Title"] = "Tạo Mới Y Tế";
+}
+
+@await Html.PartialAsync("_EnhancedUI")
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="enhanced-card fade-in">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title"><i class="fas fa-pills me-2 text-primary"></i>Tạo Mới Y Tế</h3>
+                        <a asp-page="./Index" class="btn btn-enhanced btn-enhanced-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay Lại
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation enhanced-form" novalidate>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="section-separator">
+                            <h3><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h3>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Medical.Name" class="form-label">Tên Y Tế</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fas fa-signature"></i></span>
+                                        <input asp-for="Medical.Name" class="form-control" placeholder="Nhập tên thuốc" required />
+                                    </div>
+                                    <span asp-validation-for="Medical.Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Medical.TypeMedical" class="form-label">Phân Loại</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fas fa-tag"></i></span>
+                                        <select asp-for="Medical.TypeMedical" class="form-select" asp-items="Model.MedicalTypesList" required>
+                                            <option value="">-- Chọn Loại Thuốc --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="Medical.TypeMedical" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Medical.Unit" class="form-label">Đơn Vị</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fas fa-box"></i></span>
+                                        <select asp-for="Medical.Unit" class="form-select" asp-items="Model.UnitList" required>
+                                            <option value="">-- Chọn Đơn Vị --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="Medical.Unit" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Medical.SupplierId" class="form-label">Nhà Cung Cấp</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fas fa-building"></i></span>
+                                        <select asp-for="Medical.SupplierId" class="form-select" asp-items="Model.SupplierList" required>
+                                            <option value="">-- Chọn Nhà Cung Cấp --</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="Medical.SupplierId" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Medical.Price" class="form-label">Giá (VNĐ)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fas fa-money-bill-wave"></i></span>
+                                        <input asp-for="Medical.Price" class="form-control" type="number" step="1000" min="0" placeholder="Nhập giá thuốc" required />
+                                        <span class="input-group-text">đ</span>
+                                    </div>
+                                    <span asp-validation-for="Medical.Price" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Hình Ảnh</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fas fa-image"></i></span>
+                                        <input type="file" name="ImageFiles" id="ImageFiles" class="form-control" multiple accept="image/*" />
+                                    </div>
+                                    <small class="text-muted">Có thể chọn nhiều hình ảnh</small>
+                                    <div id="image-preview-container" class="image-preview-container mt-3"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Medical.Description" class="form-label">Mô Tả</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="fas fa-align-left"></i></span>
+                                        <textarea asp-for="Medical.Description" class="form-control" rows="7" placeholder="Nhập mô tả về thuốc" required></textarea>
+                                    </div>
+                                    <span asp-validation-for="Medical.Description" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-enhanced btn-enhanced-success">
+                                <i class="fas fa-save"></i> Tạo Mới Y Tế
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Enable Bootstrap form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+
+        // Preview images before upload
+        document.querySelector('#ImageFiles').addEventListener('change', function(e) {
+            const previewContainer = document.getElementById('image-preview-container');
+            previewContainer.innerHTML = ''; // Clear previous previews
+            
+            if (e.target.files.length === 0) {
+                previewContainer.style.display = 'none';
+                return;
+            }
+            
+            previewContainer.style.display = 'flex';
+            
+            Array.from(e.target.files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'image-preview-item fade-in';
+                    previewItem.style.animationDelay = `${index * 0.1}s`;
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <span class="badge bg-primary position-absolute bottom-0 end-0 m-1">${index + 1}</span>
+                    `;
+                    previewContainer.appendChild(previewItem);
+                }
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .form-label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        .card {
+            border: none;
+        }
+
+        .btn-primary {
+            padding: 0.75rem;
+        }
+
+        .was-validated .form-control:invalid:focus,
+        .was-validated .form-select:invalid:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220,53,69,.25);
+        }
+    </style>
+}

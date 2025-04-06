@@ -1,0 +1,321 @@
+@page
+@using MedicalWarehouse_BusinessObject.Enums
+@model MedicalWareHouse_Client.Pages.OrderPage.MyOrdersModel
+@{
+    ViewData["Title"] = "Đơn Hàng Của Tôi";
+    Layout = "_Layout";
+}
+
+<!-- Notifications -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                    <h3 class="mb-0 fw-bold"><i class="fas fa-shopping-bag me-2"></i>Đơn Hàng Của Tôi</h3>
+                    <div>
+                        <a asp-page="Create" asp-route-type="@OrderType.Export" class="btn btn-light">
+                            <i class="fas fa-plus me-1"></i> Tạo Đơn Xuất
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="border-0 px-4 py-3">Loại Đơn Hàng</th>
+                                    <th class="border-0 px-4 py-3">Ngày Tạo Đơn</th>
+                                    <th class="border-0 px-4 py-3">Trạng Thái</th>
+                                    <th class="border-0 px-4 py-3">Tên Đơn Hàng</th>
+                                    <th class="border-0 px-4 py-3">Người Tạo</th>
+                                    <th class="border-0 px-4 py-3 text-center">Chức Năng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Orders.Any())
+                                {
+                                    @foreach (var order in Model.Orders.OrderByDescending(o => o.CreatedDate))
+                                    {
+                                        <tr>
+                                            <td class="px-4">
+                                                @if (order.Type == OrderType.Import)
+                                                {
+                                                    <span class="badge bg-info rounded-pill px-3 py-2">
+                                                        <i class="fas fa-arrow-down me-1"></i> Nhập
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-primary rounded-pill px-3 py-2">
+                                                        <i class="fas fa-arrow-up me-1"></i> Xuất
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="px-4">@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                                            <td class="px-4">
+                                                @if(order.Status == OrderStatus.ACCEPTED)
+                                                {
+                                                    <span class="badge bg-success rounded-pill px-3 py-2">
+                                                        <i class="fas fa-check-circle me-1"></i> Đã Chấp Nhận
+                                                    </span>
+                                                }
+                                                else if(order.Status == OrderStatus.ORDERED)
+                                                {
+                                                    <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
+                                                        <i class="fas fa-hourglass-half me-1"></i> Đã Đặt Hàng
+                                                    </span>
+                                                }
+                                                else if(order.Status == OrderStatus.PURCHASED)
+                                                {
+                                                    <span class="badge bg-danger rounded-pill px-3 py-2">
+                                                        <i class="fas fa-money-bill me-1"></i> Đã Thanh Toán
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                                        <i class="fas fa-question-circle me-1"></i> Không Xác Định
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="px-4 fw-semibold">@order.Name</td>
+                                            <td class="px-4">@order.CreateBy</td>
+                                            <td class="px-4 text-center">
+                                                <div class="btn-group">
+                                                    <a asp-page="Edit" asp-route-id="@order.Id" class="btn btn-outline-primary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a asp-page="Details" asp-route-id="@order.Id" class="btn btn-outline-info">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-danger"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#deleteOrderModal"
+                                                            data-order-id="@order.Id"
+                                                            data-order-name="@order.Name">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    @if (order.Status == OrderStatus.ORDERED)
+                                                    {
+                                                        <button type="button" class="btn btn-outline-success pay-order-btn"
+                                                                data-order-id="@order.Id">
+                                                            <i class="fas fa-money-bill"></i> Thanh Toán
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="text-muted my-4">
+                                                <i class="fas fa-shopping-bag fa-4x mb-3 text-light"></i>
+                                                <p class="lead">Bạn chưa có đơn hàng nào</p>
+                                                <a asp-page="Create" asp-route-type="@OrderType.Export" class="btn btn-primary mt-2">
+                                                    <i class="fas fa-plus me-1"></i> Tạo Đơn Hàng Mới
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xóa Đơn Hàng -->
+<div class="modal fade" id="deleteOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post" asp-page-handler="Delete">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xác Nhận Xóa</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="deleteOrderId" name="id" />
+                    <div class="text-center mb-3">
+                        <i class="fas fa-exclamation-triangle text-warning fa-4x mb-3"></i>
+                    </div>
+                    <p class="text-center">Bạn có chắc chắn muốn xóa đơn hàng: <strong id="deleteOrderName" class="text-danger"></strong>?</p>
+                    <p class="text-center text-danger small">Hành động này không thể hoàn tác!</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Xóa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            // Xử lý xóa giỏ hàng nếu đơn hàng đã được tạo thành công từ giỏ hàng
+            @if (TempData["ClearCart"] != null && (bool)TempData["ClearCart"] == true)
+            {
+                <text>
+                // Xóa giỏ hàng từ localStorage
+                localStorage.removeItem('cart');
+                console.log("Đã xóa giỏ hàng sau khi tạo đơn hàng thành công");
+                </text>
+            }
+            
+            // Xử lý modal xóa
+            $('#deleteOrderModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var orderId = button.data('order-id');
+                var orderName = button.data('order-name');
+
+                $('#deleteOrderId').val(orderId);
+                $('#deleteOrderName').text(orderName);
+            });
+
+            $('#deleteOrderModal').on('hidden.bs.modal', function () {
+                $('#deleteOrderId').val('');
+                $('#deleteOrderName').text('');
+            });
+
+            // Auto hide alerts after 5 seconds
+            setTimeout(function () {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+
+            $('.pay-order-btn').on('click', function () {
+                var orderId = $(this).data('order-id');
+                handlePayment(orderId);
+            });
+
+            function handlePayment(orderId) {
+                $.ajax({
+                    url: '@Model.GetCurrentDomain()order/' + orderId,
+                    method: 'GET',
+                    headers: {
+                        'Accept': '*/*',
+                        'Authorization': 'Bearer ' + '@HttpContext.Session.GetString("AccessToken")'
+                    },
+                    success: function (response) {
+                        if (response.success && response.result) {
+                            var paymentData = {
+                                orderRequest: response.result.orderDetails.map(detail => ({
+                                    medicalId: detail.medicalId,
+                                    quantity: detail.orderQuantity
+                                })),
+                                cancelUrl: window.location.origin + '/OrderPage/MyOrders',
+                                returnUrl: window.location.origin + '/OrderPage/MyOrders?orderId=' + orderId
+                            };
+
+                            $.ajax({
+                                url: '@Model.GetCurrentDomain()api/CheckOut/create-payment-link',
+                                method: 'POST',
+                                contentType: 'application/json',
+                                headers: {
+                                    'Accept': '*/*',
+                                    'Authorization': 'Bearer ' + '@HttpContext.Session.GetString("AccessToken")'
+                                },
+                                data: JSON.stringify(paymentData),
+                                success: function (paymentResponse) {
+                                    if (paymentResponse.success && paymentResponse.result) {
+                                        window.location.href = paymentResponse.result;
+                                    } else {
+                                        showNotification('error', 'Lỗi khi tạo link thanh toán: ' + (paymentResponse.message || 'Không xác định'));
+                                    }
+                                },
+                                error: function (xhr, status, error) {
+                                    showNotification('error', 'Lỗi khi gọi API thanh toán: ' + error);
+                                }
+                            });
+                        } else {
+                            showNotification('error', 'Lỗi khi lấy thông tin đơn hàng: ' + (response.message || 'Không xác định'));
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        showNotification('error', 'Lỗi khi lấy thông tin đơn hàng: ' + error);
+                    }
+                });
+            }
+
+            function showNotification(type, message) {
+                const alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+                const icon = type === 'error' ? 'exclamation-circle' : 'check-circle';
+                
+                const alertHtml = `
+                    <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-${icon} me-2"></i> ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                
+                $('body').prepend(alertHtml);
+                setTimeout(() => {
+                    $('.alert').fadeOut('slow', function() {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+
+            // Xử lý sau khi thanh toán thành công
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('orderId');
+            if (orderId) {
+                updateOrderStatus(orderId);
+            }
+
+            function updateOrderStatus(orderId) {
+                $.ajax({
+                    url: '@Model.GetCurrentDomain()order/update-status/' + orderId,
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    headers: {
+                        'Accept': '*/*',
+                        'Authorization': 'Bearer ' + '@HttpContext.Session.GetString("AccessToken")'
+                    },
+                    data: JSON.stringify({ status: @((int)OrderStatus.PURCHASED) }),
+                    success: function (response) {
+                        if (response.success) {
+                            showNotification('success', 'Đơn hàng đã được cập nhật thành "Đã Thanh Toán"');
+                            setTimeout(() => {
+                                window.location.href = window.location.pathname;
+                            }, 2000);
+                        } else {
+                            showNotification('error', 'Lỗi khi cập nhật trạng thái đơn hàng: ' + (response.message || 'Không xác định'));
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        showNotification('error', 'Lỗi khi cập nhật trạng thái đơn hàng: ' + error);
+                    }
+                });
+            }
+        });
+    </script>
+}

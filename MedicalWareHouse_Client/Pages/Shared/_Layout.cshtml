@@ -1,0 +1,617 @@
+﻿@using Microsoft.AspNetCore.Http
+@using System.IdentityModel.Tokens.Jwt
+@using System.Security.Claims
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var token = Context.Session.GetString("AccessToken");
+    string username = "";
+    bool isLoggedIn = false;
+    List<string> userRoles = new List<string>();
+
+    if (!string.IsNullOrEmpty(token))
+    {
+        isLoggedIn = true;
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(token);
+        username = jwtToken.Claims.FirstOrDefault(c => c.Type == "username")?.Value ?? 
+                  jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value ?? 
+                  jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? "";
+        userRoles = jwtToken.Claims.Where(c => c.Type == ClaimTypes.Role || c.Type == "role")
+                           .Select(c => c.Value)
+                           .ToList();
+    }
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Kho Y Tế</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/supplier.css" />
+    <link rel="stylesheet" href="~/MedicalWareHouse_Client.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary-color: #0ea5e9;
+            --accent-color: #f97316;
+            --text-color: #1e293b;
+            --light-text: #94a3b8;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --sidebar-width: 260px;
+            --navbar-height: 70px;
+            --border-radius: 0.5rem;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Roboto', 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', 'Segoe UI', sans-serif;
+            font-weight: 600;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* Navbar styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--navbar-height);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            box-shadow: var(--box-shadow);
+            z-index: 1000;
+            padding: 0.5rem 1.5rem;
+            transition: var(--transition);
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 0.5rem 1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand i {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .navbar-brand:hover {
+            transform: translateY(-2px);
+            color: white !important;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            padding: 0.6rem 1rem;
+            margin: 0 0.3rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            font-weight: 500;
+            position: relative;
+        }
+
+        .navbar .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0%;
+            height: 2px;
+            background: white;
+            transition: var(--transition);
+            transform: translateX(-50%);
+        }
+
+        .navbar .nav-link:hover::after {
+            width: 70%;
+        }
+
+        .navbar .nav-link:hover {
+            color: white !important;
+            transform: translateY(-2px);
+        }
+
+        .navbar .nav-link i {
+            margin-right: 5px;
+        }
+
+        .user-welcome {
+            background-color: rgba(255,255,255,0.15);
+            padding: 8px 15px;
+            border-radius: 50px;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .user-welcome i {
+            background: var(--primary-dark);
+            padding: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--card-bg);
+            position: fixed;
+            left: 0;
+            top: var(--navbar-height);
+            bottom: 0;
+            padding: 1.5rem 1rem;
+            box-shadow: var(--box-shadow);
+            overflow-y: auto;
+            transition: var(--transition);
+            z-index: 990;
+        }
+
+        .sidebar h4 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar h4 i {
+            background: var(--primary-color);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            margin-right: 10px;
+        }
+
+        .sidebar .nav {
+            margin-top: 0.5rem;
+        }
+
+        .sidebar .nav-link {
+            color: var(--text-color) !important;
+            padding: 0.9rem 1rem;
+            margin: 0.3rem 0;
+            border-radius: 10px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 12px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(14, 165, 233, 0.15);
+            border-radius: 6px;
+            color: var(--secondary-color);
+            transition: var(--transition);
+        }
+
+        .sidebar .nav-link:hover {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: white !important;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .sidebar .nav-link:hover i {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+            transform: scaleY(0);
+            transition: var(--transition);
+            transform-origin: bottom;
+        }
+
+        .sidebar .nav-link:hover::before {
+            transform: scaleY(1);
+        }
+
+        /* Main content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--navbar-height);
+            padding: 2rem;
+            min-height: calc(100vh - var(--navbar-height));
+            transition: var(--transition);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.1), rgba(14, 165, 233, 0.1));
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Custom badge styles */
+        .badge {
+            padding: 0.45em 0.65em;
+            font-weight: 500;
+            border-radius: 6px;
+        }
+
+        .badge-primary {
+            background-color: rgba(37, 99, 235, 0.15);
+            color: var(--primary-color);
+        }
+
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+        }
+
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--warning-color);
+        }
+
+        .badge-danger {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--danger-color);
+        }
+
+        /* Table styles */
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        .table th {
+            background-color: rgba(37, 99, 235, 0.05);
+            color: var(--primary-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .table th, .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table tbody tr {
+            transition: var(--transition);
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+
+        /* Footer */
+        .footer {
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .footer p {
+            margin-bottom: 0;
+        }
+
+        /* Responsive */
+        @@media (max-width: 992px) {
+            :root {
+                --sidebar-width: 230px;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            :root {
+                --sidebar-width: 0px;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+                width: 270px;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .footer {
+                margin-left: 0;
+            }
+            
+            .toggle-sidebar {
+                display: block !important;
+            }
+        }
+
+        /* Mobile menu toggle button */
+        .toggle-sidebar {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <button class="toggle-sidebar d-md-none" type="button" id="toggleSidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <a class="navbar-brand" asp-area="" asp-page="/Index">
+                    <i class="fas fa-hospital-alt"></i>Kho Y Tế
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Chuyển đổi điều hướng">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-page="/Index">
+                                <i class="fas fa-home me-1"></i>Trang Chủ
+                            </a>
+                        </li>
+                        @if (isLoggedIn)
+                        {
+                            @if (userRoles.Contains("ADMIN") || userRoles.Contains("STAFF"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-page="/AreaPage/Dashboard">
+                                        <i class="fas fa-chart-line me-1"></i>Dashboard
+                                    </a>
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <a href="/UserDetails" class="user-welcome">
+                                    <i class="fas fa-user"></i>@username
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Logout">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Đăng Xuất
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Login">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Đăng Nhập
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <h4><i class="fas fa-th-large"></i>Mục Lục</h4>
+            <ul class="nav flex-column">
+                @if (!userRoles.Contains("PHARMACY"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-page="/AreaPage/Index">
+                            <i class="fas fa-map-marker-alt"></i>Khu Vực
+                        </a>
+                    </li>
+                }
+                <li class="nav-item">
+                    <a class="nav-link" asp-page="/MedicalPage/Index">
+                        <i class="fas fa-pills"></i>Thuốc
+                    </a>
+                </li>
+                @if (!userRoles.Contains("PHARMACY"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-page="/OrderPage/Index">
+                            <i class="fas fa-shopping-cart"></i>Đơn Hàng
+                        </a>
+                    </li>
+                }
+                @if (userRoles.Contains("PHARMACY"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-page="/OrderPage/MyOrders">
+                            <i class="fas fa-list"></i>Đơn Hàng Của Tôi
+                        </a>
+                    </li>
+                }
+                @if (!userRoles.Contains("PHARMACY"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-page="/ShipmentPage/Index">
+                            <i class="fas fa-truck"></i>Lô Thuốc
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/SupplierPage/Index">
+                            <i class="fas fa-building"></i>Nhà Cung Cấp
+                        </a>
+                    </li>
+                }
+                @if (userRoles.Contains("ADMIN"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/UserPage/Index">
+                            <i class="fas fa-user"></i>Quản lý người dùng
+                        </a>
+                    </li>
+                }
+               
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container-fluid main-content">
+            <main role="main">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <p>© @DateTime.Now.Year - Kho Y Tế - Hệ thống quản lý kho dược phẩm</p>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Toggle sidebar on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggleSidebar');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+                
+                // Close sidebar when clicking outside on mobile
+                document.addEventListener('click', function(event) {
+                    const isClickInsideSidebar = sidebar.contains(event.target);
+                    const isClickOnToggleBtn = toggleBtn.contains(event.target);
+                    
+                    if (!isClickInsideSidebar && !isClickOnToggleBtn && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                    }
+                });
+            }
+            
+            // Add active class to current nav link
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && currentPath.includes(href.replace('~/', '/'))) {
+                    link.style.backgroundColor = 'var(--primary-color)';
+                    link.style.color = 'white !important';
+                    link.querySelector('i').style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                    link.querySelector('i').style.color = 'white';
+                }
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,52 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.MedicalPage.DeleteModel
+
+@{
+    ViewData["Title"] = "Xóa";
+}
+
+<h1>Xóa</h1>
+
+<h3>Bạn có chắc chắn muốn xóa loại thuốc này không?</h3>
+<div>
+    <h4>Thuốc</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Medical.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Medical.Name)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Medical.TypeMedical)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Medical.TypeMedical)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Medical.Description)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Medical.Description)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Medical.Price)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Medical.Price)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Medical.SupplierId)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Medical.SupplierId)
+        </dd>
+    </dl>
+
+    <form method="post">
+        <input type="hidden" asp-for="Medical.Id" />
+        <input type="submit" value="Xóa" class="btn btn-danger" /> |
+        <a asp-page="./Index" class="btn btn-secondary">Quay Lại Danh Sách</a>
+    </form>
+</div>

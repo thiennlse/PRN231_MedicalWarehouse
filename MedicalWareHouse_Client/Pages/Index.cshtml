@@ -1,0 +1,108 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Trang Chủ - Medical Warehouse";
+}
+
+<!-- Hero Section -->
+<div class="hero-section text-center">
+    <h1 class="display-4 fw-bold">Chào Mừng Đến Với Medical Warehouse</h1>
+    <p class="lead">Quản lý kho y tế thông minh - Đảm bảo cung ứng thiết bị y tế an toàn và hiệu quả.</p>
+    <a href="#features" class="btn btn-custom btn-lg mt-3">Khám Phá Ngay</a>
+</div>
+
+<!-- Features Section -->
+<section id="features" class="row g-4 text-center">
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="feature-icon mb-3">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <h3>Quản Lý Hàng Tồn Kho</h3>
+            <p>Theo dõi số lượng thiết bị y tế và thuốc men trong thời gian thực.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="feature-icon mb-3">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h3>Xử Lý Đơn Hàng</h3>
+            <p>Tạo và quản lý đơn hàng nhanh chóng, đảm bảo giao hàng đúng hạn.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="feature-icon mb-3">
+                <i class="fas fa-building"></i>
+            </div>
+            <h3>Hợp Tác Nhà Cung Cấp</h3>
+            <p>Kết nối với các nhà cung cấp uy tín để duy trì nguồn cung ổn định.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<div class="cta-section text-center">
+    <h2>Bắt Đầu Quản Lý Kho Y Tế Ngay Hôm Nay</h2>
+    <p>Tìm hiểu cách tối ưu hóa quy trình quản lý kho với công nghệ hiện đại.</p>
+    <a href="https://learn.microsoft.com/aspnet/core" class="btn btn-outline-primary btn-lg">Tìm Hiểu ASP.NET Core</a>
+</div>
+
+@section Scripts {
+    <script>
+        // Thêm hiệu ứng cuộn mượt mà khi bấm "Khám Phá Ngay"
+        document.querySelector('a[href="#features"]').addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector('#features').scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+}
+
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #007bff, #00b4d8);
+        color: white;
+        padding: 60px 0;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-card {
+        background: #ffffff;
+        border: none;
+        transition: transform 0.3s, box-shadow 0.3s;
+        padding: 20px;
+        height: 100%;
+    }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #007bff;
+    }
+
+    .btn-custom {
+        background-color: #28a745;
+        color: white;
+        border-radius: 25px;
+        padding: 10px 30px;
+    }
+
+        .btn-custom:hover {
+            background-color: #218838;
+            color: white;
+        }
+
+    .cta-section {
+        background: #e9ecef;
+        padding: 40px 0;
+        border-radius: 10px;
+        margin-top: 30px;
+    }
+</style>

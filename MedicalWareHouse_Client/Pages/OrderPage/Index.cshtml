@@ -1,0 +1,327 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.OrderPage.IndexModel
+@using MedicalWarehouse_BusinessObject.Enums
+@{
+    ViewData["Title"] = "Đơn Hàng";
+    Layout = "_Layout";
+}
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    @if (TempData["CreateShipmentSuccessMessage"] != null)
+    {
+        <div id="shipmentSuccessToast" class="toast bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i> @TempData["CreateShipmentSuccessMessage"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div id="successToast" class="toast bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div id="errorToast" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-exclamation-circle me-2"></i> @TempData["ErrorMessage"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model.Roles != null && Model.Roles.Any())
+{
+    <div class="alert alert-info alert-dismissible fade show">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-user-tag fs-5 me-2"></i>
+            <div>Vai trò hiện tại: <strong>@string.Join(", ", Model.Roles.Select(r => 
+                r == "ADMIN" ? "Quản Trị Viên" : 
+                r == "PHARMACY" ? "Dược Sĩ" : 
+                r == "STAFF" ? "Nhân Viên" : r))</strong></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-gradient bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                    <h3 class="mb-0 fw-bold"><i class="fas fa-clipboard-list me-2"></i>Quản Lý Đơn Hàng</h3>
+                    <div class="d-flex gap-2">
+                        <!-- Search Bar -->
+                        <form method="get" class="d-flex">
+                            <div class="input-group">
+                                <input type="text" name="searchByName" class="form-control" placeholder="Tìm theo Mã Đơn Hàng" value="@Model.SearchByName" />
+                                <button type="submit" class="btn btn-light">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        <!-- Create Buttons -->
+                        @if (Model.Roles.Contains("ADMIN"))
+                        {
+                            <a asp-page="Create" asp-route-type="@OrderType.Import" class="btn btn-success">
+                                <i class="fas fa-download me-1"></i> Yêu Cầu Nhập Hàng
+                            </a>
+                        }
+                        @if (Model.Roles.Contains("PHARMACY"))
+                        {
+                            <a asp-page="Create" asp-route-type="@OrderType.Export" class="btn btn-info">
+                                <i class="fas fa-cart-plus me-1"></i> Mua Hàng
+                            </a>
+                        }
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="border-0 px-4 py-3">Tên Người Dùng</th>
+                                    <th class="border-0 px-4 py-3">Loại Đơn Hàng</th>
+                                    <th class="border-0 px-4 py-3">Ngày Tạo Đơn</th>
+                                    <th class="border-0 px-4 py-3">Trạng Thái</th>
+                                    <th class="border-0 px-4 py-3">Mã Đơn Hàng</th>
+                                    <th class="border-0 px-4 py-3">Người Tạo</th>
+                                    <th class="border-0 px-4 py-3 text-center">Chức Năng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Order.Any())
+                                {
+                                    @foreach (var order in Model.Order)
+                                    {
+                                        <tr>
+                                            <td class="px-4">@(order.User?.UserName ?? "Người Dùng Không Xác Định")</td>
+                                            <td class="px-4">
+                                                @if (order.Type == OrderType.Import)
+                                                {
+                                                    <span class="badge bg-info rounded-pill px-3 py-2">
+                                                        <i class="fas fa-arrow-down me-1"></i> Nhập
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-primary rounded-pill px-3 py-2">
+                                                        <i class="fas fa-arrow-up me-1"></i> Xuất
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="px-4">@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                                            <td class="px-4">
+                                                @if(order.Status == OrderStatus.ACCEPTED)
+                                                {
+                                                    <span class="badge bg-success rounded-pill px-3 py-2">
+                                                        <i class="fas fa-check-circle me-1"></i> Đã Chấp Nhận
+                                                    </span>
+                                                }
+                                                else if(order.Status == OrderStatus.ORDERED)
+                                                {
+                                                    <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
+                                                        <i class="fas fa-hourglass-half me-1"></i> Đã Đặt Hàng
+                                                    </span>
+                                                }
+                                                else if(order.Status == OrderStatus.PURCHASED)
+                                                {
+                                                    <span class="badge bg-danger rounded-pill px-3 py-2">
+                                                        <i class="fas fa-ban me-1"></i> Đã Từ Chối
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                                        <i class="fas fa-question-circle me-1"></i> Không Xác Định
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="px-4 fw-semibold">@order.Name</td>
+                                            <td class="px-4">@order.CreateBy</td>
+                                            <td class="px-4 text-center">
+                                                <div class="btn-group">
+                                                    @if (order.Status != OrderStatus.ACCEPTED && 
+                                                         order.Type == OrderType.Import && 
+                                                         Model.Roles.Contains("STAFF"))
+                                                    {
+                                                        <a asp-page="/ShipmentPage/Create"
+                                                           asp-route-orderId="@order.Id"
+                                                           class="btn btn-outline-success">
+                                                            <i class="fas fa-check"></i>
+                                                        </a>
+                                                    }
+                                                    <a asp-page="Details" asp-route-id="@order.Id" class="btn btn-outline-info">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-danger"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#deleteOrderModal"
+                                                            data-order-id="@order.Id"
+                                                            data-order-name="@order.Name">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    <!--nếu muốn set quyền thì xóa trên mở dưới-->
+@*                                                     @if (!Model.Roles.Contains("STAFF") || Model.Roles.Count > 1)
+                                                    {
+                                                        <button type="button" class="btn btn-outline-danger"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#deleteOrderModal"
+                                                                data-order-id="@order.Id"
+                                                                data-order-name="@order.Name">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    } *@
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5">
+                                            <div class="text-muted my-4">
+                                                <i class="fas fa-clipboard-list fa-4x mb-3 text-light"></i>
+                                                <p class="lead">Không có đơn hàng nào</p>
+                                                @if (Model.Roles.Contains("ADMIN"))
+                                                {
+                                                    <a asp-page="Create" asp-route-type="@OrderType.Import" class="btn btn-primary mt-2 me-2">
+                                                        <i class="fas fa-download me-1"></i> Tạo Yêu Cầu Nhập Hàng
+                                                    </a>
+                                                }
+                                                @if (Model.Roles.Contains("PHARMACY"))
+                                                {
+                                                    <a asp-page="Create" asp-route-type="@OrderType.Export" class="btn btn-primary mt-2">
+                                                        <i class="fas fa-cart-plus me-1"></i> Tạo Đơn Mua Hàng
+                                                    </a>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Phân trang -->
+                    @if (Model.TotalPages > 0)
+                    {
+                        <nav aria-label="Page navigation" class="p-3 bg-light border-top">
+                            <ul class="pagination pagination-sm justify-content-center mb-0">
+                                <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="@(Model.CurrentPage - 1)" asp-route-searchByName="@Model.SearchByName">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                @for (int i = 1; i <= Model.TotalPages; i++)
+                                {
+                                    <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                                        <a class="page-link" asp-page="./Index" asp-route-pageNumber="@i" asp-route-searchByName="@Model.SearchByName">@i</a>
+                                    </li>
+                                }
+                                <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                                    <a class="page-link" asp-page="./Index" asp-route-pageNumber="@(Model.CurrentPage + 1)" asp-route-searchByName="@Model.SearchByName">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xóa Đơn Hàng -->
+<div class="modal fade" id="deleteOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post" asp-page-handler="Delete">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xác Nhận Xóa</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="deleteOrderId" name="id" />
+                    <div class="text-center mb-3">
+                        <i class="fas fa-exclamation-triangle text-warning fa-4x mb-3"></i>
+                    </div>
+                    <p class="text-center">Bạn có chắc chắn muốn xóa đơn hàng: <strong id="deleteOrderName" class="text-danger"></strong>?</p>
+                    <p class="text-center text-danger small">Hành động này không thể hoàn tác!</p>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> Xóa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            // Xử lý modal xóa
+            $('#deleteOrderModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var orderId = button.data('order-id');
+                var orderName = button.data('order-name');
+
+                $('#deleteOrderId').val(orderId);
+                $('#deleteOrderName').text(orderName);
+            });
+
+            // Xóa dữ liệu modal khi đóng
+            $('#deleteOrderModal').on('hidden.bs.modal', function () {
+                $('#deleteOrderId').val('');
+                $('#deleteOrderName').text('');
+            });
+
+            // Hiển thị toast thông báo
+            const successToast = document.getElementById('successToast');
+            const errorToast = document.getElementById('errorToast');
+            const shipmentSuccessToast = document.getElementById('shipmentSuccessToast');
+
+            if (shipmentSuccessToast) {
+                const toast = new bootstrap.Toast(shipmentSuccessToast, { delay: 5000 });
+                toast.show();
+            }
+
+            if (successToast) {
+                const toast = new bootstrap.Toast(successToast, { delay: 5000 });
+                toast.show();
+            }
+
+            if (errorToast) {
+                const toast = new bootstrap.Toast(errorToast, { delay: 5000 });
+                toast.show();
+            }
+
+            // Tự động ẩn thông báo sau 5 giây
+            setTimeout(function () {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+}

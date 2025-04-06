@@ -1,0 +1,303 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.MedicalPage.DetailsModel
+
+@{
+    ViewData["Title"] = "Chi Tiết Y Tế";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1 class="h3 mb-0 font-weight-bold">Chi Tiết Lô Thuốc</h1>
+                        <a asp-page="./Index" class="btn btn-light">
+                            <i class="fas fa-arrow-left me-2"></i> Quay Lại
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-5">
+                            @if (Model.Medical.Image != null && Model.Medical.Image.Any())
+                            {
+                                <div id="imageCarousel" class="carousel slide shadow rounded overflow-hidden mb-4" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        @for (int i = 0; i < Model.Medical.Image.Count; i++)
+                                        {
+                                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                                <img src="@Model.Medical.Image[i]" class="d-block w-100" alt="Hình Ảnh Thuốc" style="height: 350px; object-fit: contain;">
+                                            </div>
+                                        }
+                                    </div>
+                                    @if (Model.Medical.Image.Count > 1)
+                                    {
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Previous</span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Next</span>
+                                        </button>
+                                        <div class="carousel-indicators">
+                                            @for (int i = 0; i < Model.Medical.Image.Count; i++)
+                                            {
+                                                <button type="button" data-bs-target="#imageCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i+1)"></button>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5 bg-light rounded mb-4">
+                                    <i class="fas fa-image fa-4x text-muted mb-3"></i>
+                                    <p class="text-muted">Không có hình ảnh</p>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h2 class="font-weight-bold text-primary mb-3">@Model.Medical.Name</h2>
+                                    
+                                    <!-- Description Section -->
+                                    @if (!string.IsNullOrEmpty(Model.Medical.Description))
+                                    {
+                                        <div class="description-box mb-4 p-3 bg-light rounded">
+                                            <h5 class="text-muted small text-uppercase mb-2"><i class="fas fa-info-circle me-2"></i>Mô Tả</h5>
+                                            <p class="mb-0">@Model.Medical.Description</p>
+                                        </div>
+                                    }
+
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label class="text-muted small text-uppercase">Phân Loại</label>
+                                                <h5><span class="badge bg-info px-3 py-2">@Model.Medical.TypeMedical</span></h5>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label class="text-muted small text-uppercase">Đơn Vị</label>
+                                                <h5><i class="fas fa-box me-2 text-secondary"></i>@Model.Medical.Unit</h5>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label class="text-muted small text-uppercase">Giá</label>
+                                                <h5 class="text-danger fw-bold">@Model.Medical.Price.ToString("N0") đ</h5>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label class="text-muted small text-uppercase">Nhà Cung Cấp</label>
+                                                <h5 class="fw-semi-bold">@(Model.Medical.SupplierName ?? "Không có thông tin")</h5>
+                                            </div>
+                                        </div>
+
+                                        <!-- Hiển thị tổng số lượng thuốc -->
+                                        <div class="col-md-6">
+                                            <div class="detail-item">
+                                                <label class="text-muted small text-uppercase">Số Lượng</label>
+                                                <h5>
+                                                    <span class="badge bg-warning text-dark px-3 py-2">
+                                                        <i class="fas fa-boxes me-2"></i>
+                                                        <span class="quantity-highlight">@Model.Medical.Quantity</span> @Model.Medical.Unit
+                                                    </span>
+                                                </h5>
+                                            </div>
+                                        </div>
+
+                                        <!-- Danh sách lô thuốc - hiển thị thông tin thuốc -->
+                                        @if (Model.IsAdminOrStaff && Model.Shipments != null && Model.Shipments.Any())
+                                        {
+                                            <div class="col-12 mt-3">
+                                                <div class="detail-item">
+                                                    <label class="text-muted small text-uppercase">Danh Sách Lô Thuốc Chứa Sản Phẩm Này</label>
+                                                    <div class="shipment-list mt-2">
+                                                        <div class="row">
+                                                            @foreach (var shipment in Model.Shipments)
+                                                            {
+                                                                var detail = shipment.ShipmentDetails?.FirstOrDefault(d => d.MedicalId == Model.Medical.Id);
+                                                                var quantity = detail?.Quantity ?? 0;
+                                                                
+                                                                <div class="col-md-6 mb-3">
+                                                                    <div class="shipment-item border border-1 rounded">
+                                                                        <div class="d-flex p-2 align-items-center border-bottom border-1">
+                                                                            <div class="shipment-icon me-2">
+                                                                                <i class="fas fa-box-open text-primary"></i>
+                                                                            </div>
+                                                                            <div class="shipment-code flex-grow-1 text-primary">
+                                                                                @shipment.ShipmentId.ToString().Substring(0, 8)
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="p-2">
+                                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                                <div>@(detail?.MedicalName ?? Model.Medical.Name)</div>
+                                                                                <div class="badge bg-warning text-dark rounded-pill px-2 py-1">
+                                                                                    SL: @quantity
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="mt-1 text-muted small">
+                                                                                <i class="fas fa-tag me-1"></i> @(detail?.TypeMedical ?? Model.Medical.TypeMedical)
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light py-3">
+                    <div class="d-flex justify-content-end gap-3">
+                        @if (Model.IsAdminOrStaff)
+                        {
+                            <a asp-page="./Edit" asp-route-id="@Model.Medical.Id" class="btn btn-primary px-4">
+                                <i class="fas fa-edit me-2"></i> Chỉnh Sửa
+                            </a>
+                            <a asp-page="./Delete" asp-route-id="@Model.Medical.Id" class="btn btn-danger px-4">
+                                <i class="fas fa-trash me-2"></i> Xóa
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .bg-gradient-primary {
+            background: linear-gradient(45deg, #4e73df, #3154c5);
+        }
+
+        .detail-item {
+            margin-bottom: 1.5rem;
+        }
+
+            .detail-item label {
+                display: block;
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+            }
+
+            .detail-item h5 {
+                margin: 0;
+            }
+
+        .carousel-control-prev, .carousel-control-next {
+            background-color: rgba(0,0,0,0.3);
+            width: 40px;
+            height: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 50%;
+        }
+
+        .carousel-control-prev {
+            left: 10px;
+        }
+
+        .carousel-control-next {
+            right: 10px;
+        }
+
+        .carousel-indicators {
+            bottom: 0;
+            margin-bottom: 0.5rem;
+        }
+
+            .carousel-indicators button {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background-color: rgba(255,255,255,0.5);
+            }
+
+                .carousel-indicators button.active {
+                    background-color: white;
+                }
+
+        .badge {
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.5em 1em;
+            border-radius: 30px;
+        }
+
+        .fw-semi-bold {
+            font-weight: 600;
+        }
+
+        .fw-medium {
+            font-weight: 500;
+        }
+
+        .list-group-item {
+            border: none;
+            padding: 0.5rem 0;
+        }
+
+        .description-box {
+            background-color: #f8f9fc !important;
+            border-left: 3px solid #4e73df;
+        }
+
+        .quantity-highlight {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        
+        /* Styles for the shipment items */
+        .shipment-item {
+            background-color: #fff;
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .shipment-item:hover {
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+
+        .shipment-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        /* Styles to match image */
+        .shipment-code {
+            font-weight: 600;
+            color: #4a89dc !important;
+        }
+        
+        .shipment-icon {
+            font-size: 0.9rem;
+            color: #4a89dc;
+        }
+        
+        .badge.bg-warning {
+            background-color: #f5b727 !important;
+            color: #343a40 !important;
+        }
+    </style>
+}

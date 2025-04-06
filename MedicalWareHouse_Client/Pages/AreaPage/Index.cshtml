@@ -1,0 +1,746 @@
+﻿@page
+@model MedicalWareHouse_Client.Pages.AreaPage.IndexModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Quản Lý Khu Vực";
+    Layout = "_Layout";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="successPopup" class="popup success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="errorPopup" class="popup error">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (TempData["LoginSuccessMessage"] != null)
+{
+    <div id="successPopup" class="popup success">
+        @TempData["LoginSuccessMessage"]
+    </div>
+}
+
+@if (TempData["LoginErrorMessage"] != null)
+{
+    <div id="errorPopup" class="popup error">
+        @TempData["LoginErrorMessage"]
+    </div>
+}
+
+<style>
+    .popup {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        color: white;
+        font-size: 16px;
+        z-index: 1000;
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    .success {
+        background-color: #4CAF50;
+    }
+
+    .error {
+        background-color: #f44336;
+    }
+
+    .area-card {
+        height: 100%;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .area-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .area-header {
+        padding: 20px;
+        background: linear-gradient(135deg, #6B73FF 0%, #3742BC 100%);
+        color: white;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .area-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+
+    .area-content {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .shipments-container {
+        max-height: 250px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+        /* Tùy chỉnh thanh cuộn */
+        scrollbar-width: thin;
+        scrollbar-color: #adb5bd #f8f9fa;
+        flex: 1;
+    }
+
+    .shipments-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .shipments-container::-webkit-scrollbar-track {
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .shipments-container::-webkit-scrollbar-thumb {
+        background-color: #adb5bd;
+        border-radius: 10px;
+    }
+
+    .area-actions {
+        padding: 15px 20px;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .shipment-info {
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .shipment-info:hover {
+        background-color: #f0f0f0;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .shipment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .shipment-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .shipment-date {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .shipment-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 8px;
+        border-radius: 6px;
+        background-color: #e9ecef;
+        width: 48%;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #007bff;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .no-shipments {
+        color: #6c757d;
+        font-style: italic;
+        text-align: center;
+        padding: 15px 0;
+    }
+
+    .search-area {
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .action-btn {
+        border-radius: 50px;
+        padding: 8px 20px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .add-area-btn {
+        background: linear-gradient(135deg, #6B73FF 0%, #3742BC 100%);
+        border: none;
+        color: white;
+        padding: 12px 25px;
+        font-weight: 600;
+        border-radius: 50px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .add-area-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #5964ff 0%, #2e37a3 100%);
+    }
+
+    .page-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 25px;
+        color: #3742BC;
+        border-left: 5px solid #6B73FF;
+        padding-left: 15px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        margin-top: 30px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #adb5bd;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h4 {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    /* Modal chi tiết lô hàng */
+    .detail-item {
+        margin-bottom: 8px;
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .detail-value {
+        font-weight: 400;
+        color: #212529;
+    }
+
+    .medical-item {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-left: 3px solid #6B73FF;
+    }
+
+    .medical-name {
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 8px;
+    }
+
+    .medical-details {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .medical-detail {
+        font-size: 0.9rem;
+        color: #6c757d;
+        width: 48%;
+        margin-bottom: 5px;
+    }
+
+    .shipment-modal-title {
+        color: #3742BC;
+        border-left: 4px solid #6B73FF;
+        padding-left: 10px;
+    }
+
+    .shipment-modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .shipment-modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+</style>
+
+<!-- Modal chi tiết lô hàng -->
+<div class="modal fade" id="shipmentDetailModal" tabindex="-1" aria-labelledby="shipmentDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header shipment-modal-header">
+                <h5 class="modal-title shipment-modal-title" id="shipmentDetailModalLabel">Chi Tiết Lô Hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body shipment-modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <div class="detail-row">
+                                <span class="detail-label">Tên Lô Hàng:</span>
+                                <span class="detail-value" id="modalShipmentName"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <div class="detail-row">
+                                <span class="detail-label">Ngày Nhập:</span>
+                                <span class="detail-value" id="modalShipmentDate"></span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-row">
+                                <span class="detail-label">Tổng Số Lượng:</span>
+                                <span class="detail-value" id="modalShipmentTotalItems"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 mb-3">Danh Sách Thuốc</h5>
+                <div id="modalMedicalList">
+                    <!-- Nội dung thuốc sẽ được thêm ở đây thông qua JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <a id="viewShipmentDetailLink" href="#" class="btn btn-primary">
+                    <i class="fas fa-external-link-alt me-1"></i> Xem Trang Chi Tiết
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm khu vực -->
+<div class="modal fade" id="addAreaModal" tabindex="-1" aria-labelledby="addAreaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addAreaModalLabel">Thêm Khu Vực Mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-page-handler="Add">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="Area_Name" class="form-label">Tên Khu Vực</label>
+                        <input id="Area_Name" name="Area.Name" class="form-control" required placeholder="Nhập tên khu vực" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Thêm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal cập nhật khu vực -->
+<div class="modal fade" id="updateAreaModal" tabindex="-1" aria-labelledby="updateAreaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="updateAreaModalLabel">Cập Nhật Khu Vực</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-page-handler="Update">
+                <div class="modal-body">
+                    <input type="hidden" id="updateAreaId" name="Area.Id" />
+                    <div class="mb-3">
+                        <label for="updateAreaName" class="form-label">Tên Khu Vực</label>
+                        <input id="updateAreaName" name="Area.Name" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Cập Nhật
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa khu vực -->
+<div class="modal fade" id="deleteAreaModal" tabindex="-1" aria-labelledby="deleteAreaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAreaModalLabel">Xác Nhận Xóa Khu Vực</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa khu vực "<span id="deleteAreaName" class="fw-bold"></span>" không?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Lưu ý: Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Hủy
+                </button>
+                <a id="confirmDeleteBtn" href="#" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i> Xóa
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <h1 class="page-title">Danh Sách Khu Vực</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="search-area">
+                <form method="get" class="row g-3">
+                    <div class="col-md-5">
+                        <label for="SearchName" class="form-label">Tên khu vực</label>
+                        <input type="text" class="form-control" id="SearchName" name="SearchName" value="@Model.SearchName" placeholder="Tìm theo tên khu vực">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Tìm Kiếm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-end justify-content-end">
+            <button class="add-area-btn" data-bs-toggle="modal" data-bs-target="#addAreaModal">
+                <i class="fas fa-plus"></i> Thêm Khu Vực Mới
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        @if (Model.AreaList.Any())
+        {
+            @foreach (var area in Model.AreaList)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="area-card">
+                        <div class="area-header">
+                            <h3 class="area-name">@area.Name</h3>
+                        </div>
+                        <div class="area-content">
+                            <h5 class="mb-3">
+                                <i class="fas fa-truck-loading me-2"></i>Lô Hàng (@area.Shipments.Count)
+                            </h5>
+                            
+                            <div class="shipments-container">
+                                @if (area.Shipments.Any())
+                                {
+                                    @foreach (var shipment in area.Shipments.OrderByDescending(s => s.ShipDate))
+                                    {
+                                        <div class="shipment-info" onclick="showShipmentDetails('@shipment.Id', '@(string.IsNullOrEmpty(shipment.Name) ? $"Lô hàng #{shipment.Id.ToString().Substring(0, 8)}" : shipment.Name)', '@shipment.ShipDate.ToString("dd/MM/yyyy")', '@shipment.TotalItems', '@shipment.UniqueItems', '@JsonSerializer.Serialize(shipment.ShipmentDetails)')">
+                                            <div class="shipment-header">
+                                                <div class="shipment-title">
+                                                    @(string.IsNullOrEmpty(shipment.Name) ? $"Lô hàng #{shipment.Id.ToString().Substring(0, 8)}" : shipment.Name)
+                                                </div>
+                                                <div class="shipment-date">
+                                                    <i class="far fa-calendar-alt me-1"></i> @shipment.ShipDate.ToString("dd/MM/yyyy")
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="shipment-stats">
+                                                <div class="stat-item">
+                                                    <div class="stat-value">@shipment.TotalItems</div>
+                                                    <div class="stat-label">Tổng số lượng</div>
+                                                </div>
+                                                <div class="stat-item">
+                                                    <div class="stat-value">@shipment.UniqueItems</div>
+                                                    <div class="stat-label">Loại thuốc</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="no-shipments">
+                                        Chưa có lô hàng nào trong khu vực này
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="area-actions">
+                            <button class="btn btn-warning action-btn" data-bs-toggle="modal"
+                                    data-bs-target="#updateAreaModal" onclick="openUpdateModal('@area.Id', '@area.Name')">
+                                <i class="fas fa-edit"></i> Sửa
+                            </button>
+                            <button class="btn btn-danger action-btn" onclick="openDeleteModal('@area.Id', '@area.Name')">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-warehouse"></i>
+                    <h4>Không tìm thấy khu vực nào</h4>
+                    <p>Hiện chưa có khu vực nào được tạo hoặc không có khu vực nào phù hợp với tìm kiếm của bạn.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAreaModal">
+                        <i class="fas fa-plus"></i> Thêm Khu Vực Mới
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteArea(id) {
+            window.location.href = '/AreaPage/Index?handler=Delete&id=' + id;
+        }
+
+        function openDeleteModal(id, name) {
+            document.getElementById("deleteAreaName").textContent = name;
+            document.getElementById("confirmDeleteBtn").onclick = function() {
+                deleteArea(id);
+            };
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteAreaModal'));
+            deleteModal.show();
+        }
+
+        function openUpdateModal(id, name) {
+            document.getElementById("updateAreaId").value = id;
+            document.getElementById("updateAreaName").value = name;
+        }
+        
+        function showShipmentDetails(id, name, date, totalItems, uniqueItems, detailsJson) {
+            // Cập nhật thông tin cơ bản cho modal
+            document.getElementById("modalShipmentName").textContent = name;
+            document.getElementById("modalShipmentDate").textContent = date;
+            document.getElementById("modalShipmentTotalItems").textContent = totalItems;
+            
+            // Đặt link đến trang chi tiết
+            document.getElementById("viewShipmentDetailLink").href = "/ShipmentPage/Details?id=" + id;
+            
+            // Xử lý và hiển thị danh sách thuốc
+            try {
+                const medicalList = document.getElementById("modalMedicalList");
+                medicalList.innerHTML = ""; // Xóa nội dung cũ
+                
+                // Thử xử lý dữ liệu JSON theo nhiều cách
+                let details;
+                try {
+                    // Dữ liệu JSON có thể bị escape theo nhiều cách
+                    let processedJson = detailsJson;
+                    processedJson = processedJson.replace(/&quot;/g, '"');
+                    processedJson = processedJson.replace(/\\"/g, '"');
+                    
+                    // Log ra để debug
+                    console.log("JSON đã xử lý:", processedJson);
+                    
+                    // Có thể có exception khi parse JSON nên cần try-catch riêng
+                    details = JSON.parse(processedJson);
+                } catch (parseError) {
+                    console.error("Lỗi khi parse JSON:", parseError);
+                    // Thử cách khác: có thể dữ liệu đã là object
+                    if (typeof detailsJson === 'object') {
+                        details = detailsJson;
+                    } else {
+                        throw parseError; // Ném lỗi để catch bên ngoài xử lý
+                    }
+                }
+                
+                // Log ra object để xem cấu trúc
+                console.log("Chi tiết lô hàng:", details);
+                
+                if (details && details.length > 0) {
+                    details.forEach((detail, index) => {
+                        // Log từng chi tiết để xem cấu trúc cụ thể
+                        console.log(`Chi tiết thuốc ${index}:`, detail);
+                        
+                        const medicalItem = document.createElement("div");
+                        medicalItem.className = "medical-item";
+                        
+                        // Hiển thị tên thuốc - tìm kiếm qua nhiều trường khác nhau
+                        const medicalName = document.createElement("div");
+                        medicalName.className = "medical-name";
+                        
+                        let nameDisplayed = false;
+                        
+                        // Kiểm tra trường hợp 1: detail.Medical?.Name
+                        if (detail.Medical && detail.Medical.Name) {
+                            medicalName.textContent = detail.Medical.Name;
+                            nameDisplayed = true;
+                        }
+                        // Kiểm tra trường hợp 2: detail.medical?.name
+                        else if (detail.medical && detail.medical.name) {
+                            medicalName.textContent = detail.medical.name;
+                            nameDisplayed = true;
+                        }
+                        // Kiểm tra trường hợp 3: detail.MedicalName
+                        else if (detail.MedicalName) {
+                            medicalName.textContent = detail.MedicalName;
+                            nameDisplayed = true;
+                        }
+                        // Kiểm tra trường hợp 4: Trường name trực tiếp
+                        else if (detail.name) {
+                            medicalName.textContent = detail.name;
+                            nameDisplayed = true;
+                        }
+                        // Kiểm tra trường hợp 5: Trường Name viết hoa
+                        else if (detail.Name) {
+                            medicalName.textContent = detail.Name;
+                            nameDisplayed = true;
+                        }
+                        
+                        // Nếu không tìm thấy tên theo tất cả cách trên
+                        if (!nameDisplayed) {
+                            medicalName.textContent = "Không xác định";
+                        }
+                        
+                        medicalItem.appendChild(medicalName);
+                        
+                        const medicalDetails = document.createElement("div");
+                        medicalDetails.className = "medical-details";
+                        
+                        // Thêm thông tin số lượng - kiểm tra các trường hợp có thể
+                        const quantityDetail = document.createElement("div");
+                        quantityDetail.className = "medical-detail";
+                        
+                        let quantity = detail.Quantity || detail.quantity || 0;
+                        quantityDetail.innerHTML = "<strong>Số lượng:</strong> " + quantity;
+                        medicalDetails.appendChild(quantityDetail);
+                        
+                        // Thêm thông tin hạn sử dụng - kiểm tra các trường hợp có thể
+                        const expiryDetail = document.createElement("div");
+                        expiryDetail.className = "medical-detail";
+                        
+                        // Tìm ngày hết hạn trong các trường khác nhau
+                        let expiryDate = null;
+                        if (detail.ExpiredDate) {
+                            expiryDate = new Date(detail.ExpiredDate);
+                        } else if (detail.expiredDate) {
+                            expiryDate = new Date(detail.expiredDate);
+                        } else if (detail.ExpireDate) {
+                            expiryDate = new Date(detail.ExpireDate);
+                        } else if (detail.expireDate) {
+                            expiryDate = new Date(detail.expireDate);
+                        }
+                        
+                        if (expiryDate && !isNaN(expiryDate)) {
+                            // Định dạng ngày theo dd/mm/yyyy
+                            const day = expiryDate.getDate().toString().padStart(2, '0');
+                            const month = (expiryDate.getMonth() + 1).toString().padStart(2, '0');
+                            const year = expiryDate.getFullYear();
+                            expiryDetail.innerHTML = "<strong>Hạn sử dụng:</strong> " + day + "/" + month + "/" + year;
+                        } else {
+                            expiryDetail.innerHTML = "<strong>Hạn sử dụng:</strong> Không có thông tin";
+                        }
+                        
+                        medicalDetails.appendChild(expiryDetail);
+                        medicalItem.appendChild(medicalDetails);
+                        medicalList.appendChild(medicalItem);
+                    });
+                } else {
+                    medicalList.innerHTML = "<div class='alert alert-info'>Không có thông tin chi tiết về thuốc</div>";
+                }
+            } catch (error) {
+                console.error("Lỗi khi xử lý dữ liệu chi tiết lô hàng:", error);
+                console.error("JSON được truyền vào:", detailsJson);
+                document.getElementById("modalMedicalList").innerHTML = 
+                    "<div class='alert alert-danger'>Đã xảy ra lỗi khi tải thông tin chi tiết. Chi tiết lỗi: " + error.message + "</div>";
+            }
+            
+            // Hiển thị modal
+            var modal = new bootstrap.Modal(document.getElementById('shipmentDetailModal'));
+            modal.show();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var updateModalEl = document.getElementById("updateAreaModal");
+            if (updateModalEl) {
+                updateModalEl.addEventListener("hidden.bs.modal", function () {
+                    document.getElementById("updateAreaId").value = "";
+                    document.getElementById("updateAreaName").value = "";
+                });
+            }
+        });
+
+        setTimeout(function () {
+            var popups = document.querySelectorAll(".popup");
+            popups.forEach(function (popup) {
+                popup.style.opacity = "0";
+                setTimeout(() => popup.remove(), 500);
+            });
+        }, 5000);
+    </script>
+}
